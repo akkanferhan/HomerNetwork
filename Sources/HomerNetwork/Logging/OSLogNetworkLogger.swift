@@ -18,17 +18,17 @@ public struct OSLogNetworkLogger: NetworkLogger {
     ///     emitted in the clear. Comparison is case-insensitive.
     public init(
         subsystem: String,
-        category: String = "network",
-        publicHeaderFields: Set<String> = ["Content-Type", "Accept"]
+        category: String = NetworkLoggerFormat.defaultCategory,
+        publicHeaderFields: Set<String> = NetworkLoggerFormat.defaultPublicHeaderFields
     ) {
         self.logger = os.Logger(subsystem: subsystem, category: category)
         self.publicHeaderFields = Set(publicHeaderFields.map { $0.lowercased() })
     }
 
     public func log(request: URLRequest) {
-        let method = request.httpMethod ?? "?"
-        let url = request.url?.absoluteString ?? "?"
-        logger.info("→ \(method, privacy: .public) \(url, privacy: .public)")
+        let method = request.httpMethod ?? NetworkLoggerFormat.unknownPlaceholder
+        let url = request.url?.absoluteString ?? NetworkLoggerFormat.unknownPlaceholder
+        logger.info("\(NetworkLoggerFormat.requestPrefix, privacy: .public) \(method, privacy: .public) \(url, privacy: .public)")
 
         for (field, value) in request.allHTTPHeaderFields ?? [:] {
             if publicHeaderFields.contains(field.lowercased()) {
@@ -40,11 +40,11 @@ public struct OSLogNetworkLogger: NetworkLogger {
     }
 
     public func log(response: HTTPURLResponse, data: Data) {
-        let url = response.url?.absoluteString ?? "?"
-        logger.info("← \(response.statusCode, privacy: .public) \(url, privacy: .public) (\(data.count, privacy: .public)B)")
+        let url = response.url?.absoluteString ?? NetworkLoggerFormat.unknownPlaceholder
+        logger.info("\(NetworkLoggerFormat.responsePrefix, privacy: .public) \(response.statusCode, privacy: .public) \(url, privacy: .public) (\(data.count, privacy: .public)B)")
     }
 
     public func log(error: any Error) {
-        logger.error("✕ \(String(describing: error), privacy: .public)")
+        logger.error("\(NetworkLoggerFormat.errorPrefix, privacy: .public) \(String(describing: error), privacy: .public)")
     }
 }

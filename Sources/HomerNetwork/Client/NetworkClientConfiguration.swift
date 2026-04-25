@@ -15,7 +15,7 @@ public struct NetworkClientConfiguration: Sendable {
     public init(
         session: any URLSessionProtocol = URLSession.shared,
         defaultHeaders: HTTPHeaders = [:],
-        defaultTimeout: TimeInterval = 30,
+        defaultTimeout: TimeInterval = HomerNetworkDefaults.timeoutInterval,
         logger: any NetworkLogger = NoopNetworkLogger(),
         validateHTTPStatus: Bool = true
     ) {

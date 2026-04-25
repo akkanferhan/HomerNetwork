@@ -1,5 +1,17 @@
 import Foundation
 
+/// The half-open ranges that map raw HTTP status codes onto ``StatusCodeType``.
+///
+/// Internal — exposed only so ``StatusCodeType/init(statusCode:)`` and
+/// downstream tests share a single source of truth for the boundaries.
+enum HTTPStatusRange {
+    static let informational = 100..<200
+    static let success = 200..<300
+    static let redirection = 300..<400
+    static let clientError = 400..<500
+    static let serverError = 500..<600
+}
+
 /// A semantic categorization of an HTTP status code.
 public enum StatusCodeType: Sendable, Hashable {
     case informational
@@ -11,12 +23,12 @@ public enum StatusCodeType: Sendable, Hashable {
 
     public init(statusCode: Int) {
         switch statusCode {
-        case 100..<200: self = .informational
-        case 200..<300: self = .success
-        case 300..<400: self = .redirection
-        case 400..<500: self = .clientError
-        case 500..<600: self = .serverError
-        default:        self = .unrecognized
+        case HTTPStatusRange.informational: self = .informational
+        case HTTPStatusRange.success:       self = .success
+        case HTTPStatusRange.redirection:   self = .redirection
+        case HTTPStatusRange.clientError:   self = .clientError
+        case HTTPStatusRange.serverError:   self = .serverError
+        default:                            self = .unrecognized
         }
     }
 }
