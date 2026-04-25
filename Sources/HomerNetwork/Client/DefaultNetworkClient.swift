@@ -1,0 +1,90 @@
+import Foundation
+
+/// The default ``NetworkClient`` implementation.
+///
+/// Built on top of `URLSession` (or any ``URLSessionProtocol`` you inject).
+/// `actor` isolation means concurrent ``send(_:)`` calls don't race over
+/// shared mutable state and keeps the door open for in-flight tracking,
+/// request deduplication, and authentication refresh in future versions.
+public actor DefaultNetworkClient: NetworkClient {
+    private let configuration: NetworkClientConfiguration
+    private let builder = RequestBuilder()
+
+    public init(configuration: NetworkClientConfiguration = NetworkClientConfiguration()) {
+        self.configuration = configuration
+    }
+
+    public func send<E: Endpoint>(_ endpoint: E) async throws -> NetworkResponse<E.Response> {
+        let request: URLRequest
+        do {
+            request = try builder.makeRequest(
+                for: endpoint,
+                defaultHeaders: configuration.defaultHeaders,
+                defaultTimeout: configuration.defaultTimeout
+            )
+        } catch let error as NetworkEncodingError {
+            configuration.logger.log(error: error)
+            throw NetworkError.encoding(error)
+        } catch {
+            configuration.logger.log(error: error)
+            throw NetworkError.invalidRequest
+        }
+
+        configuration.logger.log(request: request)
+
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await configuration.session.data(for: request)
+        } catch {
+            configuration.logger.log(error: error)
+            throw NetworkError.transport(SendableErrorBox(error))
+        }
+
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw NetworkError.invalidResponse
+        }
+
+        configuration.logger.log(response: httpResponse, data: data)
+
+        let status = HTTPStatus(httpURLResponse: httpResponse)
+        let headers = HTTPHeaders(httpResponse.responseHeaders)
+
+        if configuration.validateHTTPStatus, !status.isSuccess {
+            throw NetworkError.http(status: status, data: data)
+        }
+
+        do {
+            let value = try endpoint.decoder.decode(E.Response.self, from: data)
+            return NetworkResponse(value: value, status: status, headers: headers, data: data)
+        } catch {
+            configuration.logger.log(error: error)
+            throw NetworkError.decoding(SendableErrorBox(error), data: data)
+        }
+    }
+}
+
+/// Wraps an arbitrary `Error` as a `Sendable` value so it can flow through
+/// ``NetworkError`` cases that require `any Error & Sendable`.
+private struct SendableErrorBox: Error, @unchecked Sendable, CustomStringConvertible {
+    let underlying: any Error
+
+    init(_ error: any Error) {
+        self.underlying = error
+    }
+
+    var description: String { String(describing: underlying) }
+}
+
+private extension HTTPURLResponse {
+    /// `allHeaderFields` is `[AnyHashable: Any]`; this distills it into a
+    /// `[String: String]` matching what `URLRequest.allHTTPHeaderFields` accepts.
+    var responseHeaders: [String: String] {
+        var result: [String: String] = [:]
+        for (key, value) in allHeaderFields {
+            guard let field = key as? String else { continue }
+            result[field] = String(describing: value)
+        }
+        return result
+    }
+}
