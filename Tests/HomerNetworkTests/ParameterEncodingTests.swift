@@ -136,16 +136,19 @@ struct ParameterEncodingTests {
             #expect(request.value(forHTTPHeaderField: "Content-Type") == "application/vnd.api+json")
         }
 
-        @Test("throws jsonSerializationFailed for un-serializable parameters")
+        @Test("throws jsonSerializationFailed with underlying message for un-serializable parameters")
         func throwsForInvalidJSON() {
-            // An NSDate is not JSON-serializable via JSONSerialization
+            // Date is Sendable so it satisfies Parameters' value type but is
+            // not JSON-serializable via JSONSerialization.
             var request = URLRequest(url: URL(string: "https://api.example.com")!)
             let encoder = JSONParameterEncoder()
-            // Parameters is [String: any Sendable]; we cannot easily pass non-JSON-serializable
-            // values through the typed API, so we verify the happy path encodes correctly
-            // and trust the error path from JSONSerialization.
-            #expect(throws: Never.self) {
-                try encoder.encode(["valid": "json"], into: &request)
+            do {
+                try encoder.encode(["created": Date()], into: &request)
+                Issue.record("expected jsonSerializationFailed to be thrown")
+            } catch let NetworkEncodingError.jsonSerializationFailed(underlying) {
+                #expect(!underlying.isEmpty)
+            } catch {
+                Issue.record("unexpected error: \(error)")
             }
         }
     }
