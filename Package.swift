@@ -32,6 +32,11 @@ let package = Package(
                 .product(name: "HomerFoundation", package: "HomerFoundation")
             ],
             path: "Sources/HomerNetworkFoundation"
+        ),
+        .testTarget(
+            name: "HomerNetworkTests",
+            dependencies: ["HomerNetwork"],
+            path: "Tests/HomerNetworkTests"
         )
     ],
     swiftLanguageModes: [.v6]
