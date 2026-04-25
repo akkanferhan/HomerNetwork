@@ -18,9 +18,9 @@ struct MultipartFormDataTests {
     // MARK: - Empty payload
 
     @Test("encode with no parts produces only closing boundary")
-    func encodeEmptyPartsHasClosingBoundary() {
+    func encodeEmptyPartsHasClosingBoundary() throws {
         let sut = MultipartFormData(parts: [], boundary: Self.fixedBoundary)
-        let data = sut.encode()
+        let data = try sut.encode()
         let body = String(data: data, encoding: .utf8) ?? ""
         #expect(body == "--\(Self.fixedBoundary)--\r\n")
     }
@@ -31,7 +31,7 @@ struct MultipartFormDataTests {
     func encodeTextPart() throws {
         let part = MultipartPart.text(name: "username", value: "homer")
         let sut = MultipartFormData(parts: [part], boundary: Self.fixedBoundary)
-        let rawBody = sut.encode()
+        let rawBody = try sut.encode()
         let body = try #require(String(data: rawBody, encoding: .utf8))
 
         #expect(body.contains("--\(Self.fixedBoundary)\r\n"))
@@ -52,7 +52,7 @@ struct MultipartFormDataTests {
             mimeType: .png
         )
         let sut = MultipartFormData(parts: [part], boundary: Self.fixedBoundary)
-        let rawBody = sut.encode()
+        let rawBody = try sut.encode()
         let body = try #require(String(data: rawBody, encoding: .utf8))
 
         #expect(body.contains("Content-Disposition: form-data; name=\"avatar\"; filename=\"photo.png\"\r\n"))
@@ -72,7 +72,7 @@ struct MultipartFormDataTests {
             mimeType: .pdf
         )
         let sut = MultipartFormData(parts: [text, file], boundary: Self.fixedBoundary)
-        let rawBody = sut.encode()
+        let rawBody = try sut.encode()
         let body = try #require(String(data: rawBody, encoding: .utf8))
 
         let components = body.components(separatedBy: "--\(Self.fixedBoundary)\r\n")
@@ -92,7 +92,7 @@ struct MultipartFormDataTests {
             filename: "shot.jpeg"
         )
         let sut = MultipartFormData(parts: [part], boundary: Self.fixedBoundary)
-        let rawBody = sut.encode()
+        let rawBody = try sut.encode()
         let body = try #require(String(data: rawBody, encoding: .utf8))
         #expect(body.contains("Content-Type: image/jpeg"))
     }
@@ -120,5 +120,38 @@ struct MultipartFormDataTests {
             boundary: "same-boundary"
         )
         #expect(a == b)
+    }
+
+    // MARK: - Escaping
+
+    @Test("encode escapes embedded double quotes in field name")
+    func escapesQuotesInName() throws {
+        let part = MultipartPart.text(name: "field\"name", value: "v")
+        let sut = MultipartFormData(parts: [part], boundary: Self.fixedBoundary)
+        let body = try #require(String(data: try sut.encode(), encoding: .utf8))
+        #expect(body.contains(#"name="field\"name""#))
+    }
+
+    @Test("encode rejects CR/LF in name")
+    func rejectsCRLFInName() {
+        let part = MultipartPart.text(name: "bad\r\nname", value: "v")
+        let sut = MultipartFormData(parts: [part], boundary: Self.fixedBoundary)
+        #expect(throws: NetworkEncodingError.self) {
+            _ = try sut.encode()
+        }
+    }
+
+    @Test("encode rejects CR/LF in filename")
+    func rejectsCRLFInFilename() {
+        let part = MultipartPart.file(
+            name: "f",
+            data: Data(),
+            filename: "a\nb.png",
+            mimeType: .png
+        )
+        let sut = MultipartFormData(parts: [part], boundary: Self.fixedBoundary)
+        #expect(throws: NetworkEncodingError.self) {
+            _ = try sut.encode()
+        }
     }
 }

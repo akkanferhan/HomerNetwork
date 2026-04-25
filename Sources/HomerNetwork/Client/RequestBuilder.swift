@@ -102,7 +102,7 @@ public struct RequestBuilder: Sendable {
             if let query, !query.isEmpty {
                 try URLParameterEncoder().encode(query, into: &request)
             }
-            request.httpBody = formData.encode()
+            request.httpBody = try formData.encode()
             request.setValue(
                 formData.contentTypeHeaderValue,
                 forHTTPHeaderField: HTTPHeader.Field.contentType
