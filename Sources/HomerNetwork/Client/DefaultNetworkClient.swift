@@ -38,6 +38,9 @@ public actor DefaultNetworkClient: NetworkClient {
             (data, response) = try await configuration.session.data(for: request)
         } catch {
             configuration.logger.log(error: error)
+            if Task.isCancelled || (error as? URLError)?.code == .cancelled {
+                throw NetworkError.cancelled
+            }
             throw NetworkError.transport(SendableErrorBox(error))
         }
 

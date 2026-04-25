@@ -187,6 +187,20 @@ struct DefaultNetworkClientTests {
 
     // MARK: - 5xx → NetworkError.http
 
+    @Test("URLError.cancelled becomes NetworkError.cancelled")
+    func cancelledMaps() async {
+        let session = MockURLSession(result: .failure(URLError(.cancelled)))
+        let client = DefaultNetworkClient(configuration: makeConfig(session: session))
+        do {
+            _ = try await client.send(UserEndpoint())
+            Issue.record("expected NetworkError.cancelled")
+        } catch NetworkError.cancelled {
+            // expected
+        } catch {
+            Issue.record("unexpected error: \(error)")
+        }
+    }
+
     @Test("response headers preserve Set-Cookie value as a string")
     func responseHeadersFlattenSetCookie() async throws {
         let payload = try JSONEncoder().encode(UserPayload(id: "u1", name: "Homer"))
