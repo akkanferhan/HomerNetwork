@@ -69,14 +69,27 @@ public actor DefaultNetworkClient: NetworkClient {
 
 /// Wraps an arbitrary `Error` as a `Sendable` value so it can flow through
 /// ``NetworkError`` cases that require `any Error & Sendable`.
+///
+/// `@unchecked Sendable` is safe here because every field of the box is
+/// captured eagerly at `init` time as an immutable Swift `String`, and the
+/// original `Error` reference is not retained — so there is nothing
+/// mutable for a concurrent reader to observe.
 private struct SendableErrorBox: Error, @unchecked Sendable, CustomStringConvertible {
-    let underlying: any Error
+    /// Eager snapshot of the underlying `String(describing:)` rendering.
+    let snapshot: String
+    /// Eager snapshot of the bridged `NSError` domain, when available.
+    let domain: String?
+    /// Eager snapshot of the bridged `NSError` code, when available.
+    let code: Int?
 
     init(_ error: any Error) {
-        self.underlying = error
+        self.snapshot = String(describing: error)
+        let nsError = error as NSError
+        self.domain = nsError.domain
+        self.code = nsError.code
     }
 
-    var description: String { String(describing: underlying) }
+    var description: String { snapshot }
 }
 
 private extension HTTPURLResponse {

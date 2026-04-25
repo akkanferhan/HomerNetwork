@@ -69,8 +69,14 @@ public struct HTTPHeaders: Sendable, Hashable, ExpressibleByDictionaryLiteral, S
     }
 
     /// Snapshot as a `[String: String]` dictionary suitable for `URLRequest.allHTTPHeaderFields`.
+    ///
+    /// `set(_:forField:)` already collapses duplicates case-insensitively,
+    /// so under normal use this dictionary holds one entry per header.
+    /// `uniquingKeysWith:` is defensive: if any future code path stashes
+    /// two entries with the same field, the later one wins instead of the
+    /// runtime trapping.
     public var dictionary: [String: String] {
-        Dictionary(uniqueKeysWithValues: storage.map { ($0.field, $0.value) })
+        Dictionary(storage.map { ($0.field, $0.value) }, uniquingKeysWith: { _, last in last })
     }
 
     public var isEmpty: Bool { storage.isEmpty }
