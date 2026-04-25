@@ -20,6 +20,10 @@ public enum NetworkError: Error, Sendable {
 
     /// The response was missing or not an `HTTPURLResponse`.
     case invalidResponse
+
+    /// The request was cancelled — either by `Task.cancel()` propagating
+    /// down or by `URLSession` returning `URLError.cancelled`.
+    case cancelled
 }
 
 extension NetworkError: CustomStringConvertible {
@@ -37,6 +41,8 @@ extension NetworkError: CustomStringConvertible {
             return "NetworkError.decoding(\(error))"
         case .invalidResponse:
             return "NetworkError.invalidResponse"
+        case .cancelled:
+            return "NetworkError.cancelled"
         }
     }
 }
