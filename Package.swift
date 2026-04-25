@@ -11,10 +11,6 @@ let package = Package(
         .library(
             name: "HomerNetwork",
             targets: ["HomerNetwork"]
-        ),
-        .library(
-            name: "HomerNetworkFoundation",
-            targets: ["HomerNetworkFoundation"]
         )
     ],
     dependencies: [
@@ -23,15 +19,10 @@ let package = Package(
     targets: [
         .target(
             name: "HomerNetwork",
-            path: "Sources/HomerNetwork"
-        ),
-        .target(
-            name: "HomerNetworkFoundation",
             dependencies: [
-                "HomerNetwork",
                 .product(name: "HomerFoundation", package: "HomerFoundation")
             ],
-            path: "Sources/HomerNetworkFoundation"
+            path: "Sources/HomerNetwork"
         ),
         .testTarget(
             name: "HomerNetworkTests",

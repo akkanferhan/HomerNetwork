@@ -1,11 +1,10 @@
 import Foundation
-import HomerNetwork
 import HomerFoundation
 
 /// A ``NetworkLogger`` that forwards to a ``HomerFoundation/Log`` channel.
 ///
-/// Available in the `HomerNetworkFoundation` product when you already use
-/// HomerFoundation for logging and want a single unified signal.
+/// Use when you already rely on HomerFoundation for logging and want a
+/// single unified signal across networking and the rest of the app.
 ///
 /// Like ``OSLogNetworkLogger``, query items are redacted by default
 /// before the URL reaches the log channel; supply `publicQueryKeys` to
