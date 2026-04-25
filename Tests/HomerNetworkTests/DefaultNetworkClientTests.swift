@@ -254,15 +254,21 @@ private func makeHTTPResponse(
 private func makeConfig(
     session: any URLSessionProtocol,
     validateHTTPStatus: Bool = true,
-    logger: any NetworkLogger = NoopNetworkLogger()
+    logger: any NetworkLogger = NoopNetworkLogger(),
+    reachability: any ReachabilityProviding = AlwaysReachable()
 ) -> NetworkClientConfiguration {
     NetworkClientConfiguration(
         session: session,
         defaultHeaders: [:],
         defaultTimeout: 10,
         logger: logger,
-        validateHTTPStatus: validateHTTPStatus
+        validateHTTPStatus: validateHTTPStatus,
+        reachability: reachability
     )
+}
+
+private struct AlwaysReachable: ReachabilityProviding {
+    func isReachable() async -> Bool { true }
 }
 
 // MARK: - Test endpoint

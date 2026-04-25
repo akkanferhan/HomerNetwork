@@ -4,8 +4,8 @@ Modern Swift 6 / iOS 18 networking library for the Homer suite of Apple apps. Ty
 
 - **Swift tools:** 6.0 (`swiftLanguageModes: [.v6]`, strict concurrency)
 - **Platforms:** iOS 18+, macOS 14+
-- **Tests:** Swift Testing — 91 tests in 11 suites
-- **Status:** `0.1.0` — public API documented with DocC, 0 warnings
+- **Tests:** Swift Testing — 110 tests in 12 suites
+- **Status:** `0.1.0` (released); `0.2.0` pending release — public API documented with DocC, 0 warnings
 
 ## Installation
 
@@ -156,6 +156,37 @@ var headers: HTTPHeaders = [
 headers.set("Bearer …", forField: HTTPHeader.Field.authorization)
 ```
 
+### Reachability — `ReachabilityProviding`
+
+`DefaultNetworkClient` consults its injected `ReachabilityProviding` before every request and throws `NetworkError.offline` when the device reports no usable network path — no transport is attempted, so retries are safe and idempotent.
+
+```swift
+public protocol ReachabilityProviding: Sendable {
+    func isReachable() async -> Bool
+}
+```
+
+The default — `DefaultReachabilityChecker()` — wraps `HomerFoundation.Reachability.currentStatus()` and performs a one-shot `NWPathMonitor` probe per request (~10–50ms). For high-throughput clients, inject a long-lived `HomerFoundation.Reachability` instance with `start()` already called; it conforms to `ReachabilityProviding` directly and reads from a cached observable property:
+
+```swift
+import HomerFoundation
+import HomerNetwork
+
+let reachability = Reachability()
+reachability.start()
+
+let config = NetworkClientConfiguration(reachability: reachability)
+let client = DefaultNetworkClient(configuration: config)
+```
+
+To disable the gate entirely (e.g. in unit tests or when you want to surface raw transport errors), inject a stub returning `true`:
+
+```swift
+struct AlwaysReachable: ReachabilityProviding {
+    func isReachable() async -> Bool { true }
+}
+```
+
 ### Status & Errors — `HTTPStatus`, `NetworkError`
 
 `HTTPStatus` exposes both the raw code and the `StatusCodeType` semantic bucket. `NetworkError` distinguishes between `.encoding`, `.transport`, `.http`, `.decoding`, `.invalidResponse`, and `.invalidRequest`; the raw `Data` is retained on `.http` and `.decoding` so callers can decode error envelopes.
@@ -195,7 +226,6 @@ The current 0.x line is free to break API as the design settles. Items planned b
 
 - `RequestInterceptor` middleware pipeline (auth-token injection, refresh, tracing).
 - `RetryPolicy` (exponential backoff, idempotent-only retries).
-- Reachability-aware short-circuit (optional, opt-in).
 - `ResponseValidator` chain.
 - Streaming / download / upload task variants.
 
