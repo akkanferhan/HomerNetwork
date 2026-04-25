@@ -214,6 +214,34 @@ struct RequestBuilderTests {
         let components = URLComponents(url: try #require(request.url), resolvingAgainstBaseURL: false)
         #expect(components?.queryItems?.contains(URLQueryItem(name: "ref", value: "upload")) == true)
     }
+
+    // MARK: - URL preservation
+
+    @Test("path with embedded query string is preserved on the request URL")
+    func pathWithQueryStringPreserved() throws {
+        let endpoint = PlainEndpoint(path: "/v1/items?include=email&page=1")
+        let request = try sut.makeRequest(
+            for: endpoint,
+            defaultHeaders: [:],
+            defaultTimeout: defaultTimeout
+        )
+        let components = URLComponents(url: try #require(request.url), resolvingAgainstBaseURL: false)
+        #expect(components?.path == "/v1/items")
+        #expect(components?.queryItems?.contains(URLQueryItem(name: "include", value: "email")) == true)
+        #expect(components?.queryItems?.contains(URLQueryItem(name: "page", value: "1")) == true)
+    }
+
+    @Test("path with fragment is preserved on the request URL")
+    func pathWithFragmentPreserved() throws {
+        let endpoint = PlainEndpoint(path: "/help#anchor")
+        let request = try sut.makeRequest(
+            for: endpoint,
+            defaultHeaders: [:],
+            defaultTimeout: defaultTimeout
+        )
+        let components = URLComponents(url: try #require(request.url), resolvingAgainstBaseURL: false)
+        #expect(components?.fragment == "anchor")
+    }
 }
 
 // MARK: - Test endpoint stubs

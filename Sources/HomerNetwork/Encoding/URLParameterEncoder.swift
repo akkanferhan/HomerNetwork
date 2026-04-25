@@ -1,6 +1,10 @@
 import Foundation
 
 /// Encodes parameters as `URLQueryItem`s appended to the request URL.
+///
+/// Existing query items already present on the URL are preserved; if a
+/// caller supplies a key that the URL already has, the existing value is
+/// replaced rather than duplicated.
 public struct URLParameterEncoder: ParameterEncoder {
     public init() {}
 
@@ -8,13 +12,19 @@ public struct URLParameterEncoder: ParameterEncoder {
         guard let url = request.url else { throw NetworkEncodingError.missingURL }
         guard !parameters.isEmpty else { return }
 
-        var components = URLComponents(url: url, resolvingAgainstBaseURL: false)
-        var queryItems = components?.queryItems ?? []
-        for (key, value) in parameters {
-            queryItems.append(URLQueryItem(name: key, value: String(describing: value)))
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
+            throw NetworkEncodingError.missingURL
         }
-        components?.queryItems = queryItems
-        request.url = components?.url
+        var queryItems = components.queryItems ?? []
+        for (key, value) in parameters {
+            queryItems.removeAll { $0.name == key }
+            queryItems.append(URLQueryItem(name: key, value: Self.queryString(for: value)))
+        }
+        components.queryItems = queryItems
+        guard let updatedURL = components.url else {
+            throw NetworkEncodingError.missingURL
+        }
+        request.url = updatedURL
 
         if request.value(forHTTPHeaderField: HTTPHeader.Field.contentType) == nil {
             request.setValue(
@@ -22,5 +32,37 @@ public struct URLParameterEncoder: ParameterEncoder {
                 forHTTPHeaderField: HTTPHeader.Field.contentType
             )
         }
+    }
+
+    /// Renders a parameter value as a query-string-safe string.
+    ///
+    /// `Bool` values become `"true"` / `"false"` (the JSON convention; if
+    /// your API expects `"1"` / `"0"`, convert at the call site). `nil`
+    /// values produce an empty string. All other values fall back to
+    /// `String(describing:)`, which produces predictable output for
+    /// `String`, `Int`, and `Double`; callers should avoid passing `Date`,
+    /// `Data`, or custom types directly.
+    static func queryString(for value: any Sendable) -> String {
+        switch value {
+        case let bool as Bool:
+            return bool ? "true" : "false"
+        case let optional as any AnyOptionalProtocol where optional.isNil:
+            return ""
+        default:
+            return String(describing: value)
+        }
+    }
+}
+
+/// Internal protocol used by ``URLParameterEncoder/queryString(for:)`` to
+/// detect `nil` payloads inside an `Any`-typed value.
+protocol AnyOptionalProtocol {
+    var isNil: Bool { get }
+}
+
+extension Optional: AnyOptionalProtocol {
+    var isNil: Bool {
+        if case .none = self { return true }
+        return false
     }
 }

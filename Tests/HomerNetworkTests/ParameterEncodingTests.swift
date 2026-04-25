@@ -70,6 +70,37 @@ struct ParameterEncodingTests {
                 try encoder.encode(["k": "v"], into: &request)
             }
         }
+
+        @Test("replaces existing query item with same key instead of duplicating")
+        func replacesExistingKey() throws {
+            var request = URLRequest(url: URL(string: "https://api.example.com/items?page=1")!)
+            let encoder = URLParameterEncoder()
+            try encoder.encode(["page": "2"], into: &request)
+            let components = URLComponents(url: try #require(request.url), resolvingAgainstBaseURL: false)
+            let pageItems = (components?.queryItems ?? []).filter { $0.name == "page" }
+            #expect(pageItems.count == 1)
+            #expect(pageItems.first?.value == "2")
+        }
+
+        @Test("encodes Bool as 'true'/'false'")
+        func encodesBoolAsString() throws {
+            var request = URLRequest(url: URL(string: "https://api.example.com")!)
+            let encoder = URLParameterEncoder()
+            try encoder.encode(["active": true, "archived": false], into: &request)
+            let items = URLComponents(url: try #require(request.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
+            #expect(items.contains(URLQueryItem(name: "active", value: "true")))
+            #expect(items.contains(URLQueryItem(name: "archived", value: "false")))
+        }
+
+        @Test("encodes Optional<some Sendable>.none as empty string instead of 'Optional(nil)'")
+        func encodesNilAsEmpty() throws {
+            var request = URLRequest(url: URL(string: "https://api.example.com")!)
+            let encoder = URLParameterEncoder()
+            let nilValue: Int? = nil
+            try encoder.encode(["x": nilValue as any Sendable], into: &request)
+            let items = URLComponents(url: try #require(request.url), resolvingAgainstBaseURL: false)?.queryItems ?? []
+            #expect(items.contains(URLQueryItem(name: "x", value: "")))
+        }
     }
 
     // MARK: - JSONParameterEncoder
