@@ -18,5 +18,5 @@ public protocol API: Sendable {
 
 public extension API {
     var baseHeaders: HTTPHeaders { [:] }
-    var timeout: TimeInterval { 30 }
+    var timeout: TimeInterval { HomerNetworkDefaults.timeoutInterval }
 }

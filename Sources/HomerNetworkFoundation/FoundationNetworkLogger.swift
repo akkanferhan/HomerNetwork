@@ -16,17 +16,17 @@ public struct FoundationNetworkLogger: NetworkLogger {
     }
 
     public func log(request: URLRequest) {
-        let method = request.httpMethod ?? "?"
-        let url = request.url?.absoluteString ?? "?"
-        log.info("→ \(method) \(url)")
+        let method = request.httpMethod ?? NetworkLoggerFormat.unknownPlaceholder
+        let url = request.url?.absoluteString ?? NetworkLoggerFormat.unknownPlaceholder
+        log.info("\(NetworkLoggerFormat.requestPrefix) \(method) \(url)")
     }
 
     public func log(response: HTTPURLResponse, data: Data) {
-        let url = response.url?.absoluteString ?? "?"
-        log.info("← \(response.statusCode) \(url) (\(data.count)B)")
+        let url = response.url?.absoluteString ?? NetworkLoggerFormat.unknownPlaceholder
+        log.info("\(NetworkLoggerFormat.responsePrefix) \(response.statusCode) \(url) (\(data.count)B)")
     }
 
     public func log(error: any Error) {
-        log.error("✕ \(String(describing: error))")
+        log.error("\(NetworkLoggerFormat.errorPrefix) \(String(describing: error))")
     }
 }
