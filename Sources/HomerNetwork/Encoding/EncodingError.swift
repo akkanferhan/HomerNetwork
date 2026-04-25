@@ -10,8 +10,10 @@ public enum NetworkEncodingError: Error, Sendable, Equatable {
     case missingURL
     /// The supplied parameters could not be serialized.
     case invalidParameters
-    /// JSON serialization failed for the supplied parameters.
-    case jsonSerializationFailed
+    /// JSON serialization failed for the supplied parameters; the
+    /// associated string carries the underlying `JSONSerialization` error
+    /// description so callers can diagnose which value caused the failure.
+    case jsonSerializationFailed(underlying: String)
     /// Multipart body could not be assembled.
     case multipartFailure(String)
 }
