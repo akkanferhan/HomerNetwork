@@ -187,6 +187,22 @@ struct DefaultNetworkClientTests {
 
     // MARK: - 5xx → NetworkError.http
 
+    @Test("response headers preserve Set-Cookie value as a string")
+    func responseHeadersFlattenSetCookie() async throws {
+        let payload = try JSONEncoder().encode(UserPayload(id: "u1", name: "Homer"))
+        let httpResponse = makeHTTPResponse(
+            statusCode: 200,
+            headers: ["Set-Cookie": "session=abc; Path=/"]
+        )
+        let session = MockURLSession(result: .success((payload, httpResponse)))
+        let client = DefaultNetworkClient(configuration: makeConfig(session: session))
+
+        let response = try await client.send(UserEndpoint())
+        let cookie = response.headers.value(forField: "Set-Cookie")
+        #expect(cookie == "session=abc; Path=/")
+        #expect(cookie?.hasPrefix("[") == false)
+    }
+
     @Test("throws NetworkError.http for 5xx response", arguments: [500, 502, 503])
     func throwsHTTPErrorFor5xx(statusCode: Int) async throws {
         let session = MockURLSession(result: .success((Data(), makeHTTPResponse(statusCode: statusCode))))
