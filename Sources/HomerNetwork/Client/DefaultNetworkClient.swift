@@ -79,11 +79,21 @@ private struct SendableErrorBox: Error, @unchecked Sendable, CustomStringConvert
 private extension HTTPURLResponse {
     /// `allHeaderFields` is `[AnyHashable: Any]`; this distills it into a
     /// `[String: String]` matching what `URLRequest.allHTTPHeaderFields` accepts.
+    ///
+    /// Multi-value headers (which arrive as `NSArray` from `URLSession`,
+    /// notably `Set-Cookie`) are joined with `, ` per RFC 7230 §3.2.2 so
+    /// callers don't see `"["a=1", "b=2"]"` debug-formatted output.
     var responseHeaders: [String: String] {
         var result: [String: String] = [:]
         for (key, value) in allHeaderFields {
             guard let field = key as? String else { continue }
-            result[field] = String(describing: value)
+            if let array = value as? [Any] {
+                result[field] = array.map { String(describing: $0) }.joined(separator: ", ")
+            } else if let string = value as? String {
+                result[field] = string
+            } else {
+                result[field] = String(describing: value)
+            }
         }
         return result
     }
