@@ -1,6 +1,6 @@
 # HomerNetwork
 
-Modern Swift 6 / iOS 18 networking library for the Homer suite of Apple apps. Typed endpoints, actor-isolated client, async/await, multipart uploads, pluggable logging — with strict concurrency throughout and zero transitive dependencies in the core product.
+Modern Swift 6 / iOS 18 networking library for the Homer suite of Apple apps. Typed endpoints, actor-isolated client, async/await, multipart uploads, pluggable logging — with strict concurrency throughout.
 
 - **Swift tools:** 6.0 (`swiftLanguageModes: [.v6]`, strict concurrency)
 - **Platforms:** iOS 18+, macOS 14+
@@ -32,17 +32,7 @@ In code:
 import HomerNetwork
 ```
 
-If you also use [HomerFoundation](https://github.com/akkanferhan/HomerFoundation) and want a unified log signal, add the optional bridge product:
-
-```swift
-.target(
-    name: "MyApp",
-    dependencies: [
-        "HomerNetwork",
-        .product(name: "HomerNetworkFoundation", package: "HomerNetwork")
-    ]
-)
-```
+`HomerNetwork` depends on [HomerFoundation](https://github.com/akkanferhan/HomerFoundation) directly, so `Log`, `Reachability`, and friends are available transitively without a separate product.
 
 ## Quick start
 
@@ -184,7 +174,7 @@ Bundled implementations:
 
 - `NoopNetworkLogger` — silent (default).
 - `OSLogNetworkLogger(subsystem:category:publicHeaderFields:)` — `os.Logger`-backed; redacts unknown header values.
-- `FoundationNetworkLogger(log:)` — in `HomerNetworkFoundation`; routes through `HomerFoundation.Log`.
+- `FoundationNetworkLogger(log:)` — routes through `HomerFoundation.Log` for a unified Homer log signal.
 
 ## Testing your code
 
