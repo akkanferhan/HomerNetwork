@@ -8,8 +8,6 @@ import Foundation
 public enum NetworkEncodingError: Error, Sendable, Equatable {
     /// The request had no URL to attach query items to.
     case missingURL
-    /// The supplied parameters could not be serialized.
-    case invalidParameters
     /// JSON serialization failed for the supplied parameters; the
     /// associated string carries the underlying `JSONSerialization` error
     /// description so callers can diagnose which value caused the failure.
