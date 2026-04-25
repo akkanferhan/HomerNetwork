@@ -13,9 +13,18 @@ public enum NetworkError: Error, Sendable {
 
     /// The server responded with a non-2xx status. The raw body is retained
     /// so callers can decode an error envelope if they want.
+    ///
+    /// > Warning: `data` is the unfiltered response body — for many APIs
+    /// > it contains sensitive information (PII, tokens, account state).
+    /// > Do not log, attach to crash reports, or forward `data` to
+    /// > telemetry without redacting first.
     case http(status: HTTPStatus, data: Data)
 
     /// The response could not be decoded into the endpoint's `Response` type.
+    ///
+    /// > Warning: `data` is the unfiltered response body and may contain
+    /// > sensitive information. See ``NetworkError/http(status:data:)``
+    /// > for handling guidance.
     case decoding(any Error & Sendable, data: Data)
 
     /// The response was missing or not an `HTTPURLResponse`.
