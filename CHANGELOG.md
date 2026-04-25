@@ -6,14 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Added
+
+- `ReachabilityProviding` protocol — `Sendable` async gate consulted by `DefaultNetworkClient` before every request.
+- `DefaultReachabilityChecker` — default conformance wrapping `HomerFoundation.Reachability.currentStatus()` for one-shot probing.
+- `Reachability: ReachabilityProviding` extension — long-lived observable reachability instances can be injected directly for cached, hot-path-friendly checks.
+- `NetworkClientConfiguration.reachability` — injection point for the gate; defaults to `DefaultReachabilityChecker()`.
+- `NetworkError.offline` — thrown when the pre-flight reachability check fails. No transport hop is performed, so retries are safe.
+
 ### Changed
 
 - **BREAKING**: `HomerFoundation` is now a direct dependency of the core `HomerNetwork` target. Consumers no longer need a separate product to access `FoundationNetworkLogger`.
 - `FoundationNetworkLogger` moved from the removed `HomerNetworkFoundation` target into `HomerNetwork` (`Sources/HomerNetwork/Logging/`). Public symbol name unchanged — replace `import HomerNetworkFoundation` with `import HomerNetwork`.
+- `DefaultNetworkClient` now performs a reachability check before every request and throws `NetworkError.offline` when the configured `ReachabilityProviding` reports unreachable. Inject a stub returning `true` (e.g. in unit tests or replay sessions) to bypass the gate.
 
 ### Removed
 
 - **BREAKING**: `HomerNetworkFoundation` library product and target. Drop the dependency from your `Package.swift`; the single `HomerNetwork` product is sufficient.
+
+### Migration from 0.1.x
+
+1. Drop the `HomerNetworkFoundation` product reference from your `Package.swift` `dependencies`. The single `HomerNetwork` product is sufficient.
+2. Replace `import HomerNetworkFoundation` with `import HomerNetwork`. `FoundationNetworkLogger` is unchanged in shape.
+3. Add `case .offline:` (or a `default` arm) to any exhaustive `switch` over `NetworkError`. To preserve pre-0.2.0 behavior (no gate), inject a `ReachabilityProviding` stub returning `true`.
 
 ## [0.1.0] — 2026-04-25
 

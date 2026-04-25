@@ -33,6 +33,12 @@ public enum NetworkError: Error, Sendable {
     /// The request was cancelled — either by `Task.cancel()` propagating
     /// down or by `URLSession` returning `URLError.cancelled`.
     case cancelled
+
+    /// The injected ``ReachabilityProviding`` reported no usable network
+    /// path before the request was attempted. Thrown by
+    /// ``DefaultNetworkClient`` ahead of any transport hop, so retries
+    /// are safe and idempotent — nothing was sent.
+    case offline
 }
 
 extension NetworkError: CustomStringConvertible {
@@ -52,6 +58,8 @@ extension NetworkError: CustomStringConvertible {
             return "NetworkError.invalidResponse"
         case .cancelled:
             return "NetworkError.cancelled"
+        case .offline:
+            return "NetworkError.offline"
         }
     }
 }

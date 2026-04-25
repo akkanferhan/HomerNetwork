@@ -15,6 +15,11 @@ public actor DefaultNetworkClient: NetworkClient {
     }
 
     public func send<E: Endpoint>(_ endpoint: E) async throws -> NetworkResponse<E.Response> {
+        guard await configuration.reachability.isReachable() else {
+            configuration.logger.log(error: NetworkError.offline)
+            throw NetworkError.offline
+        }
+
         let request: URLRequest
         do {
             request = try builder.makeRequest(
