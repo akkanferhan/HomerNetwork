@@ -92,8 +92,6 @@ public enum HTTPHeader {
     public enum Field {
         public static let contentType = "Content-Type"
         public static let accept = "Accept"
-        public static let authorization = "Authorization"
-        public static let userAgent = "User-Agent"
     }
 
     public enum Value {

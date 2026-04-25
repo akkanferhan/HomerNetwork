@@ -172,8 +172,6 @@ struct HTTPHeadersTests {
     func fieldConstants() {
         #expect(HTTPHeader.Field.contentType == "Content-Type")
         #expect(HTTPHeader.Field.accept == "Accept")
-        #expect(HTTPHeader.Field.authorization == "Authorization")
-        #expect(HTTPHeader.Field.userAgent == "User-Agent")
     }
 
     @Test("HTTPHeader.Value constants have correct raw strings")
