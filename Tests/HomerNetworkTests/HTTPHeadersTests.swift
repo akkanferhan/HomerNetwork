@@ -131,12 +131,12 @@ struct HTTPHeadersTests {
 
     // MARK: - Sequence
 
-    @Test("makeIterator yields all stored entries")
+    @Test("makeIterator yields tuples of (field, value)")
     func sequenceIteration() {
         let sut: HTTPHeaders = ["Content-Type": "application/json", "Accept": "text/html"]
         var fields: [String] = []
-        for entry in sut {
-            fields.append(entry.field)
+        for (field, _) in sut {
+            fields.append(field)
         }
         #expect(fields.count == 2)
         #expect(fields.contains("Content-Type"))

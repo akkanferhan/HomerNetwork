@@ -11,14 +11,14 @@ public struct HTTPHeaders: Sendable, Hashable, ExpressibleByDictionaryLiteral, S
     public typealias Value = String
 
     /// A single field/value pair preserving the field name's original casing.
-    public struct Entry: Sendable, Hashable {
+    struct Entry: Sendable, Hashable {
         /// The header field name as supplied by the caller (case preserved).
-        public let field: String
+        let field: String
         /// The header value associated with ``field``.
-        public let value: String
+        let value: String
 
         /// Creates an entry from a field name and its associated value.
-        public init(field: String, value: String) {
+        init(field: String, value: String) {
             self.field = field
             self.value = value
         }
@@ -64,7 +64,7 @@ public struct HTTPHeaders: Sendable, Hashable, ExpressibleByDictionaryLiteral, S
     }
 
     /// Merges `other` into this collection. Conflicting fields are overwritten.
-    public mutating func merge(_ other: HTTPHeaders) {
+    mutating func merge(_ other: HTTPHeaders) {
         for entry in other.storage {
             set(entry.value, forField: entry.field)
         }
@@ -93,9 +93,15 @@ public struct HTTPHeaders: Sendable, Hashable, ExpressibleByDictionaryLiteral, S
     /// The number of stored entries.
     public var count: Int { storage.count }
 
-    /// Iterates entries in insertion order.
-    public func makeIterator() -> IndexingIterator<[Entry]> {
-        storage.makeIterator()
+    /// Iterates entries in insertion order, yielding tuples of
+    /// `(field: String, value: String)` so callers can destructure inline:
+    /// `for (field, value) in headers { … }`.
+    public func makeIterator() -> AnyIterator<(field: String, value: String)> {
+        var iterator = storage.makeIterator()
+        return AnyIterator {
+            guard let entry = iterator.next() else { return nil }
+            return (field: entry.field, value: entry.value)
+        }
     }
 }
 

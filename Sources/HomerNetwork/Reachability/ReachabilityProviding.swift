@@ -15,8 +15,9 @@ import Foundation
 /// > produce a ``NetworkError/transport(_:)`` error; the gate is not a
 /// > guarantee that the request will succeed if it gets past it.
 ///
-/// The default conformance, ``DefaultReachabilityChecker``, performs a
-/// one-shot probe via `HomerFoundation.Reachability.currentStatus()`.
+/// When ``NetworkClientConfiguration/init(session:defaultHeaders:defaultTimeout:logger:validateHTTPStatus:reachability:)``
+/// receives `nil` for `reachability`, an internal one-shot probe
+/// backed by `HomerFoundation.Reachability.currentStatus()` is used.
 /// To integrate with a long-lived observable connectivity store, inject
 /// a ``HomerFoundation/Reachability`` instance directly — it conforms
 /// to this protocol out of the box.
