@@ -6,6 +6,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+### Changed
+
+- **BREAKING — public surface significantly reduced.** Symbols listed under "Removed (now internal)" are no longer accessible from importing modules. Refactor as suggested in each entry's migration note below.
+- `HTTPHeaders` iteration now yields `(field: String, value: String)` tuples instead of `HTTPHeaders.Entry`. Replace `for entry in headers { … entry.field … }` with `for (field, value) in headers { … field … }`.
+- `HTTPStatus.statusType` is no longer public. Use the new convenience properties: `isSuccess` (existing), `isInformational`, `isRedirection`, `isClientError`, `isServerError`.
+- `NetworkClientConfiguration`'s stored properties (`session`, `defaultHeaders`, `defaultTimeout`, `logger`, `validateHTTPStatus`, `reachability`) are now `let` instead of `var`. Construct a new configuration to change settings.
+- `NetworkClientConfiguration.init`'s `defaultTimeout` default value is now the literal `30` (was `HomerNetworkDefaults.timeoutInterval`). Behavior identical.
+- `NetworkClientConfiguration.init`'s `reachability` parameter is now `Optional` with `nil` default; an internal default reachability provider is used when `nil` is passed.
+
+### Added
+
+- `HTTPStatus.isInformational`, `HTTPStatus.isRedirection`, `HTTPStatus.isClientError`, `HTTPStatus.isServerError` convenience properties — replace the now-internal `HTTPStatus.statusType` with category-specific Boolean checks.
+
+### Removed (now internal — was public in 0.3.0)
+
+- `HTTPHeaders.Entry` (struct + `field`, `value`, `init`). Iteration now yields tuples; if you used `Entry` directly, mutate via `set(_:forField:)` instead.
+- `HTTPHeaders.merge(_:)` (mutating). Use `merging(_:)` and reassign, or `set(_:forField:)` per entry.
+- `StatusCodeType` (enum + cases + `init(statusCode:)`). Use `HTTPStatus.is*` convenience properties.
+- `HTTPStatus.statusType`. See above.
+- `HomerNetworkDefaults` (enum + `timeoutInterval`). The default timeout is `30` seconds; configure via `NetworkClientConfiguration(defaultTimeout:)`.
+- `DefaultReachabilityChecker` (struct + `init`, `isReachable()`). Default reachability provider remains in place; you cannot name its type. To opt out, inject `Reachability(...)` from HomerFoundation or any custom `ReachabilityProviding`.
+- `MultipartFormData.makeBoundary()` (static). The default boundary is still generated automatically; pass an explicit `boundary:` argument if you need a custom one.
+- `JSONParameterEncoder` (struct + `init`, `encode(_:into:)`). Use `ParameterEncoding.json` (or `.urlAndJSON`) within `HTTPTask.parameters(...)`.
+- `URLParameterEncoder` (struct + `init`, `encode(_:into:)`). Use `ParameterEncoding.url` (or `.urlAndJSON`) within `HTTPTask.parameters(...)`. Custom encoding remains possible via `ParameterEncoding.custom(any ParameterEncoder)` — the `ParameterEncoder` protocol stays public.
+
+### Migration cheatsheet
+
+| 0.3.0 | 0.4.0 |
+|---|---|
+| `for entry in headers { entry.field }` | `for (field, _) in headers { field }` |
+| `status.statusType == .clientError` | `status.isClientError` |
+| `HomerNetworkDefaults.timeoutInterval` | `30` (literal) |
+| `var config = NetworkClientConfiguration(); config.logger = …` | `NetworkClientConfiguration(logger: …)` |
+| `JSONParameterEncoder().encode(p, into: &r)` | `HTTPTask.parameters(body: p, encoding: .json)` |
+| `URLParameterEncoder().encode(p, into: &r)` | `HTTPTask.parameters(query: p, encoding: .url)` |
+
 ## [0.3.0] — 2026-04-26
 
 Complexity-reduction pass: removes duplicate or single-use abstractions, leans on HomerFoundation 0.2.0, and tightens the public surface ahead of 1.0. All notable changes below are source-breaking for 0.2.x consumers — see migration notes.
