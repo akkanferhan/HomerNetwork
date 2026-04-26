@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-04-26
+
+Folds `HomerNetworkFoundation` into the core target and introduces an always-on reachability pre-flight gate. Both changes are source-breaking for 0.1.x consumers — see migration notes below.
+
 ### Added
 
 - `ReachabilityProviding` protocol — `Sendable` async gate consulted by `DefaultNetworkClient` before every request.
