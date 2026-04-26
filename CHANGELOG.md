@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.4.0] — 2026-04-27
+
 ### Changed
 
 - **BREAKING — public surface significantly reduced.** Symbols listed under "Removed (now internal)" are no longer accessible from importing modules. Refactor as suggested in each entry's migration note below.
@@ -162,7 +164,8 @@ Initial public release. Modern Swift 6 / iOS 18 networking layer extracted from 
 | `unRecognizedError` | `unrecognized` |
 | Multipart text + file in one protocol | `MultipartPart.Kind.text` / `.file` |
 
-[Unreleased]: https://github.com/akkanferhan/HomerNetwork/compare/0.3.0...HEAD
+[Unreleased]: https://github.com/akkanferhan/HomerNetwork/compare/0.4.0...HEAD
+[0.4.0]: https://github.com/akkanferhan/HomerNetwork/releases/tag/0.4.0
 [0.3.0]: https://github.com/akkanferhan/HomerNetwork/releases/tag/0.3.0
 [0.2.0]: https://github.com/akkanferhan/HomerNetwork/releases/tag/0.2.0
 [0.1.0]: https://github.com/akkanferhan/HomerNetwork/releases/tag/0.1.0
