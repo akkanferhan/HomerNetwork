@@ -13,10 +13,21 @@ let package = Package(
             targets: ["HomerNetwork"]
         )
     ],
+    dependencies: [
+        .package(url: "https://github.com/akkanferhan/HomerFoundation.git", from: "0.1.0")
+    ],
     targets: [
         .target(
             name: "HomerNetwork",
+            dependencies: [
+                .product(name: "HomerFoundation", package: "HomerFoundation")
+            ],
             path: "Sources/HomerNetwork"
+        ),
+        .testTarget(
+            name: "HomerNetworkTests",
+            dependencies: ["HomerNetwork"],
+            path: "Tests/HomerNetworkTests"
         )
     ],
     swiftLanguageModes: [.v6]

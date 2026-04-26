@@ -1,0 +1,11 @@
+import Foundation
+
+/// HTTP request methods supported by ``NetworkClient``.
+public enum HTTPMethod: String, Sendable, Hashable {
+    case get = "GET"
+    case post = "POST"
+    case put = "PUT"
+    case patch = "PATCH"
+    case delete = "DELETE"
+    case head = "HEAD"
+}
