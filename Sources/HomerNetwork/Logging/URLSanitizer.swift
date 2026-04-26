@@ -3,26 +3,27 @@ import Foundation
 /// Strips or redacts query items that may contain credentials before a URL
 /// is emitted to a log channel.
 ///
-/// Conformers (`OSLogNetworkLogger`, `FoundationNetworkLogger`) consume
-/// `redact(_:)` so they share a single source of truth for which query
-/// keys are safe to log in the clear.
-public struct URLSanitizer: Sendable {
+/// Internal — ``FoundationNetworkLogger`` consumes ``redact(_:)`` so it
+/// has a single source of truth for which query keys are safe to log in
+/// the clear. Third-party ``NetworkLogger`` conformers should perform
+/// their own sanitization.
+struct URLSanitizer: Sendable {
     /// Replacement string used in place of redacted query values.
     /// Uses only URL-safe characters so it survives percent-encoding round-trips.
-    public static let redactedToken = "REDACTED"
+    static let redactedToken = "REDACTED"
 
     private let publicQueryKeys: Set<String>
 
     /// - Parameter publicQueryKeys: Lower-cased names of query items whose
     ///   values are safe to log. Anything else is replaced by
     ///   ``URLSanitizer/redactedToken``.
-    public init(publicQueryKeys: Set<String> = []) {
+    init(publicQueryKeys: Set<String> = []) {
         self.publicQueryKeys = Set(publicQueryKeys.map { $0.lowercased() })
     }
 
     /// Returns a copy of `urlString` whose query values are redacted unless
     /// their key is in the allowlist. Fragment is dropped entirely.
-    public func redact(_ urlString: String) -> String {
+    func redact(_ urlString: String) -> String {
         guard var components = URLComponents(string: urlString) else { return urlString }
         if let items = components.queryItems {
             components.queryItems = items.map { item in
