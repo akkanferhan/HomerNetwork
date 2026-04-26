@@ -5,7 +5,7 @@ Modern Swift 6 / iOS 18 networking library for the Homer suite of Apple apps. Ty
 - **Swift tools:** 6.0 (`swiftLanguageModes: [.v6]`, strict concurrency)
 - **Platforms:** iOS 18+, macOS 14+
 - **Tests:** Swift Testing — 110 tests in 12 suites
-- **Status:** `0.2.0` — public API documented with DocC, 0 warnings
+- **Status:** `0.3.0` — public API documented with DocC, 0 warnings
 
 ## Installation
 
@@ -13,7 +13,7 @@ Swift Package Manager — add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/akkanferhan/HomerNetwork.git", from: "0.2.0")
+    .package(url: "https://github.com/akkanferhan/HomerNetwork.git", from: "0.3.0")
 ]
 ```
 
@@ -99,7 +99,7 @@ let config = NetworkClientConfiguration(
     session: URLSession(configuration: .ephemeral),
     defaultHeaders: ["X-Client": "HomerApp/1.0"],
     defaultTimeout: 30,
-    logger: OSLogNetworkLogger(subsystem: "com.example.app"),
+    logger: FoundationNetworkLogger(log: Log(subsystem: "com.example.app", category: "network")),
     validateHTTPStatus: true
 )
 let client = DefaultNetworkClient(configuration: config)
@@ -107,9 +107,9 @@ let client = DefaultNetworkClient(configuration: config)
 
 `validateHTTPStatus` (default `true`) throws `NetworkError.http(status:data:)` for non-2xx responses; flip it off if your backend uses 4xx envelopes you want to decode manually.
 
-### Endpoints — `API` / `Endpoint` / `HTTPTask`
+### Endpoints — `Endpoint` / `HTTPTask`
 
-`API` carries `baseURL`, `baseHeaders`, and `timeout`. `Endpoint` adds `path`, `httpMethod`, `task`, `headers`, and the `Response` associated type. `HTTPTask` covers four shapes:
+`Endpoint` carries `baseURL`, `baseHeaders`, `timeout`, `path`, `httpMethod`, `task`, `headers`, and the `Response` associated type. `HTTPTask` covers four shapes:
 
 ```swift
 .plain
@@ -204,8 +204,7 @@ public protocol NetworkLogger: Sendable {
 Bundled implementations:
 
 - `NoopNetworkLogger` — silent (default).
-- `OSLogNetworkLogger(subsystem:category:publicHeaderFields:)` — `os.Logger`-backed; redacts unknown header values.
-- `FoundationNetworkLogger(log:)` — routes through `HomerFoundation.Log` for a unified Homer log signal.
+- `FoundationNetworkLogger(log:publicHeaderFields:publicQueryKeys:)` — routes through `HomerFoundation.Log` (itself `os.Logger`-backed) for a unified Homer log signal. Header values and query items are redacted unless their field/key name is in the corresponding allowlist.
 
 ## Testing your code
 
