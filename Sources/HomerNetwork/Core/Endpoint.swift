@@ -53,7 +53,7 @@ public protocol Endpoint: Sendable {
 
 public extension Endpoint {
     var baseHeaders: HTTPHeaders { [:] }
-    var timeout: TimeInterval { HomerNetworkDefaults.timeoutInterval }
+    var timeout: TimeInterval { 30 }
     var headers: HTTPHeaders { [:] }
     var decoder: JSONDecoder { JSONDecoder() }
 
