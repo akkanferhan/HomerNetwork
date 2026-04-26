@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-04-26
+
 Complexity-reduction pass: removes duplicate or single-use abstractions, leans on HomerFoundation 0.2.0, and tightens the public surface ahead of 1.0. All notable changes below are source-breaking for 0.2.x consumers — see migration notes.
 
 ### Added
@@ -123,3 +125,8 @@ Initial public release. Modern Swift 6 / iOS 18 networking layer extracted from 
 | `statucCode` | `statusCode` |
 | `unRecognizedError` | `unrecognized` |
 | Multipart text + file in one protocol | `MultipartPart.Kind.text` / `.file` |
+
+[Unreleased]: https://github.com/akkanferhan/HomerNetwork/compare/0.3.0...HEAD
+[0.3.0]: https://github.com/akkanferhan/HomerNetwork/releases/tag/0.3.0
+[0.2.0]: https://github.com/akkanferhan/HomerNetwork/releases/tag/0.2.0
+[0.1.0]: https://github.com/akkanferhan/HomerNetwork/releases/tag/0.1.0
