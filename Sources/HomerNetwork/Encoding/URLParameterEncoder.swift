@@ -1,4 +1,5 @@
 import Foundation
+import HomerFoundation
 
 /// Encodes parameters as `URLQueryItem`s appended to the request URL.
 ///
@@ -6,9 +7,12 @@ import Foundation
 /// caller supplies a key that the URL already has, the existing value is
 /// replaced rather than duplicated.
 public struct URLParameterEncoder: ParameterEncoder {
+    /// Creates a stateless encoder.
     public init() {}
 
-    public func encode(_ parameters: Parameters, into request: inout URLRequest) throws {
+    /// Appends `parameters` as URL query items to `request.url`, replacing
+    /// any existing entries with the same key.
+    public func encode(_ parameters: HTTPParameters, into request: inout URLRequest) throws {
         guard let url = request.url else { throw NetworkEncodingError.missingURL }
         guard !parameters.isEmpty else { return }
 
@@ -46,23 +50,10 @@ public struct URLParameterEncoder: ParameterEncoder {
         switch value {
         case let bool as Bool:
             return bool ? "true" : "false"
-        case let optional as any AnyOptionalProtocol where optional.isNil:
+        case let optional as any AnyOptional where optional.isNil:
             return ""
         default:
             return String(describing: value)
         }
-    }
-}
-
-/// Internal protocol used by ``URLParameterEncoder/queryString(for:)`` to
-/// detect `nil` payloads inside an `Any`-typed value.
-protocol AnyOptionalProtocol {
-    var isNil: Bool { get }
-}
-
-extension Optional: AnyOptionalProtocol {
-    var isNil: Bool {
-        if case .none = self { return true }
-        return false
     }
 }

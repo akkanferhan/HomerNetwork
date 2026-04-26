@@ -2,9 +2,12 @@ import Foundation
 
 /// Encodes parameters as a JSON object in the request body.
 public struct JSONParameterEncoder: ParameterEncoder {
+    /// Creates a stateless encoder.
     public init() {}
 
-    public func encode(_ parameters: Parameters, into request: inout URLRequest) throws {
+    /// Serializes `parameters` to JSON and writes the bytes into
+    /// `request.httpBody`, defaulting `Content-Type` to `application/json`.
+    public func encode(_ parameters: HTTPParameters, into request: inout URLRequest) throws {
         guard JSONSerialization.isValidJSONObject(parameters) else {
             throw NetworkEncodingError.jsonSerializationFailed(
                 underlying: "value(s) not representable as JSON"
