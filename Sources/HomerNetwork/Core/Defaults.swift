@@ -4,7 +4,7 @@ import Foundation
 /// at the configuration or endpoint level.
 public enum HomerNetworkDefaults {
     /// The fallback request timeout, in seconds, applied when neither
-    /// ``API/timeout`` nor ``NetworkClientConfiguration/defaultTimeout`` is
+    /// ``Endpoint/timeout`` nor ``NetworkClientConfiguration/defaultTimeout`` is
     /// explicitly set.
     public static let timeoutInterval: TimeInterval = 30
 }

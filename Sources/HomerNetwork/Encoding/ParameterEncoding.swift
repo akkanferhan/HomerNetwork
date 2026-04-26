@@ -24,8 +24,8 @@ extension ParameterEncoding {
     ///   - query: Parameters to encode as URL query items.
     func apply(
         to request: inout URLRequest,
-        body: Parameters?,
-        query: Parameters?
+        body: HTTPParameters?,
+        query: HTTPParameters?
     ) throws {
         switch self {
         case .url:

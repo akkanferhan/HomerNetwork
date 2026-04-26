@@ -2,23 +2,30 @@ import Foundation
 
 /// Shared display constants for ``NetworkLogger`` implementations.
 ///
-/// Internal — both ``OSLogNetworkLogger`` and the ``HomerNetworkFoundation``
-/// bridge consume the same prefixes and placeholders so log output stays
-/// uniform across backends.
-public enum NetworkLoggerFormat {
+/// Internal — ``FoundationNetworkLogger`` and any third-party
+/// `NetworkLogger` conformer that lives in this module consume the same
+/// prefixes and placeholders so log output stays uniform across
+/// implementations.
+enum NetworkLoggerFormat {
     /// Prefix prepended to every outgoing-request log line.
-    public static let requestPrefix = "→"
+    static let requestPrefix = "→"
     /// Prefix prepended to every incoming-response log line.
-    public static let responsePrefix = "←"
+    static let responsePrefix = "←"
     /// Prefix prepended to every error log line.
-    public static let errorPrefix = "✕"
+    static let errorPrefix = "✕"
     /// Placeholder used when a method, URL, or category is missing.
-    public static let unknownPlaceholder = "?"
-    /// The default `os.Logger` category used by ``OSLogNetworkLogger``.
-    public static let defaultCategory = "network"
-    /// The default header field names whose values are safe to log in the clear.
-    public static let defaultPublicHeaderFields: Set<String> = [
-        HTTPHeader.Field.contentType,
-        HTTPHeader.Field.accept
-    ]
+    static let unknownPlaceholder = "?"
+    /// Replacement emitted in place of a non-allowlisted header value.
+    static let redactedHeaderValue = "<redacted>"
+
+    /// Returns a single header log line for `field: value`, redacting the
+    /// value when `field` (compared case-insensitively) is not in
+    /// `publicFields`.
+    ///
+    /// `publicFields` must already be lowercased — the normalisation is the
+    /// caller's responsibility so this remains a pure, dependency-free helper.
+    static func headerLine(field: String, value: String, publicFields: Set<String>) -> String {
+        let emittedValue = publicFields.contains(field.lowercased()) ? value : redactedHeaderValue
+        return "  \(field): \(emittedValue)"
+    }
 }

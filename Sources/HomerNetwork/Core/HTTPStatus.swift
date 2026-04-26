@@ -1,17 +1,5 @@
 import Foundation
 
-/// The half-open ranges that map raw HTTP status codes onto ``StatusCodeType``.
-///
-/// Internal — exposed only so ``StatusCodeType/init(statusCode:)`` and
-/// downstream tests share a single source of truth for the boundaries.
-enum HTTPStatusRange {
-    static let informational = 100..<200
-    static let success = 200..<300
-    static let redirection = 300..<400
-    static let clientError = 400..<500
-    static let serverError = 500..<600
-}
-
 /// A semantic categorization of an HTTP status code.
 public enum StatusCodeType: Sendable, Hashable {
     case informational
@@ -21,28 +9,43 @@ public enum StatusCodeType: Sendable, Hashable {
     case serverError
     case unrecognized
 
+    /// Buckets a raw HTTP status code into its semantic ``StatusCodeType``.
+    /// Codes outside the 100–599 range resolve to ``unrecognized``.
     public init(statusCode: Int) {
         switch statusCode {
-        case HTTPStatusRange.informational: self = .informational
-        case HTTPStatusRange.success:       self = .success
-        case HTTPStatusRange.redirection:   self = .redirection
-        case HTTPStatusRange.clientError:   self = .clientError
-        case HTTPStatusRange.serverError:   self = .serverError
-        default:                            self = .unrecognized
+        case Range.informational: self = .informational
+        case Range.success:       self = .success
+        case Range.redirection:   self = .redirection
+        case Range.clientError:   self = .clientError
+        case Range.serverError:   self = .serverError
+        default:                  self = .unrecognized
         }
+    }
+
+    /// Half-open ranges that map raw HTTP status codes onto ``StatusCodeType``.
+    private enum Range {
+        static let informational = 100..<200
+        static let success = 200..<300
+        static let redirection = 300..<400
+        static let clientError = 400..<500
+        static let serverError = 500..<600
     }
 }
 
 /// HTTP response status combining the raw code and its semantic category.
 public struct HTTPStatus: Sendable, Hashable {
+    /// The raw HTTP status code as reported by the server.
     public let statusCode: Int
+    /// The ``StatusCodeType`` bucket derived from ``statusCode``.
     public let statusType: StatusCodeType
 
+    /// Creates a status from a raw code and computes its ``statusType``.
     public init(statusCode: Int) {
         self.statusCode = statusCode
         self.statusType = StatusCodeType(statusCode: statusCode)
     }
 
+    /// Creates a status by reading `statusCode` from an `HTTPURLResponse`.
     public init(httpURLResponse: HTTPURLResponse) {
         self.init(statusCode: httpURLResponse.statusCode)
     }

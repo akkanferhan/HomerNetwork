@@ -1,6 +1,6 @@
 import Testing
 import Foundation
-@_spi(HomerNetworkInternal) @testable import HomerNetwork
+@_spi(Testing) @testable import HomerNetwork
 
 @Suite("RequestBuilder")
 struct RequestBuilderTests {

@@ -2,12 +2,16 @@ import Foundation
 
 /// Translates an ``Endpoint`` and configuration into a ready-to-send `URLRequest`.
 ///
-/// Internal — exposed via `@_spi(HomerNetworkInternal)` so the test target
+/// Internal — exposed via `@_spi(Testing)` so the test target
 /// can verify request construction without spinning up a transport.
-@_spi(HomerNetworkInternal)
+@_spi(Testing)
 public struct RequestBuilder: Sendable {
+    /// Creates a stateless request builder.
     public init() {}
 
+    /// Builds a `URLRequest` for `endpoint`, merging `defaultHeaders` under
+    /// the endpoint's own headers and falling back to `defaultTimeout`
+    /// whenever the endpoint reports a non-positive timeout.
     public func makeRequest<E: Endpoint>(
         for endpoint: E,
         defaultHeaders: HTTPHeaders,

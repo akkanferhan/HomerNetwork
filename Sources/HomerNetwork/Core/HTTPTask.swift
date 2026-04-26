@@ -11,23 +11,23 @@ public enum HTTPTask: Sendable {
 
     /// A request whose parameters are encoded according to ``ParameterEncoding``.
     case parameters(
-        body: Parameters? = nil,
+        body: HTTPParameters? = nil,
         encoding: ParameterEncoding,
-        query: Parameters? = nil
+        query: HTTPParameters? = nil
     )
 
     /// A request with parameters and one-shot additional headers merged on
-    /// top of ``API/baseHeaders`` and ``Endpoint/headers``.
+    /// top of ``Endpoint/baseHeaders`` and ``Endpoint/headers``.
     case parametersAndHeaders(
-        body: Parameters? = nil,
+        body: HTTPParameters? = nil,
         encoding: ParameterEncoding,
-        query: Parameters? = nil,
+        query: HTTPParameters? = nil,
         additionalHeaders: HTTPHeaders
     )
 
     /// A `multipart/form-data` upload with optional URL query parameters.
     case multipart(
         MultipartFormData,
-        query: Parameters? = nil
+        query: HTTPParameters? = nil
     )
 }

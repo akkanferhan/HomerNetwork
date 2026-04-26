@@ -10,10 +10,14 @@ public actor DefaultNetworkClient: NetworkClient {
     private let configuration: NetworkClientConfiguration
     private let builder = RequestBuilder()
 
+    /// Creates a client backed by the supplied configuration. Defaults to a
+    /// fresh ``NetworkClientConfiguration`` (ephemeral session, noop logger,
+    /// one-shot reachability checker).
     public init(configuration: NetworkClientConfiguration = NetworkClientConfiguration()) {
         self.configuration = configuration
     }
 
+    /// Builds, sends, and decodes the given endpoint. See ``NetworkClient/send(_:)``.
     public func send<E: Endpoint>(_ endpoint: E) async throws -> NetworkResponse<E.Response> {
         guard await configuration.reachability.isReachable() else {
             configuration.logger.log(error: NetworkError.offline)
