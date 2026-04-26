@@ -20,6 +20,8 @@ public struct DefaultReachabilityChecker: ReachabilityProviding {
     /// Creates a new one-shot reachability checker.
     public init() {}
 
+    /// Performs a one-shot `NWPathMonitor` probe and returns `true` unless
+    /// the path is `.unavailable`.
     public func isReachable() async -> Bool {
         await Reachability.currentStatus() != .unavailable
     }

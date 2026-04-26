@@ -138,7 +138,7 @@ struct ParameterEncodingTests {
 
         @Test("throws jsonSerializationFailed with underlying message for un-serializable parameters")
         func throwsForInvalidJSON() {
-            // Date is Sendable so it satisfies Parameters' value type but is
+            // Date is Sendable so it satisfies HTTPParameters' value type but is
             // not JSON-serializable via JSONSerialization.
             var request = URLRequest(url: URL(string: "https://api.example.com")!)
             let encoder = JSONParameterEncoder()
@@ -231,9 +231,9 @@ struct ParameterEncodingTests {
 // MARK: - Test helpers
 
 private final class RecordingEncoder: ParameterEncoder, @unchecked Sendable {
-    var lastParameters: Parameters?
+    var lastParameters: HTTPParameters?
 
-    func encode(_ parameters: Parameters, into request: inout URLRequest) throws {
+    func encode(_ parameters: HTTPParameters, into request: inout URLRequest) throws {
         lastParameters = parameters
     }
 }

@@ -13,7 +13,7 @@ enum MultipartFormat {
     static let boundaryDelimiter = "--"
     /// Prefix prepended to the random boundary suffix.
     static let boundaryPrefix = "Boundary-"
-    /// `Content-Type` header value template; `%@` is replaced by the boundary.
+    /// `Content-Type` header value template; the boundary is appended.
     static let contentTypeTemplate = "multipart/form-data; boundary="
     /// `Content-Disposition` header field name.
     static let contentDispositionField = "Content-Disposition"

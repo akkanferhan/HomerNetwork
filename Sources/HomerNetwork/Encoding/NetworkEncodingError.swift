@@ -4,7 +4,7 @@ import Foundation
 ///
 /// This is distinct from Swift's standard library `EncodingError` (which is
 /// raised by `Encoder` implementations); it covers failures specific to
-/// turning ``Parameters`` and multipart payloads into a `URLRequest`.
+/// turning ``HTTPParameters`` and multipart payloads into a `URLRequest`.
 public enum NetworkEncodingError: Error, Sendable, Equatable {
     /// The request had no URL to attach query items to.
     case missingURL

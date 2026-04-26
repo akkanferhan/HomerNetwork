@@ -5,6 +5,8 @@ import Foundation
 /// Conforming a mock type to this protocol is the supported way to swap
 /// the transport in tests; `URLSession` itself conforms in an extension.
 public protocol URLSessionProtocol: Sendable {
+    /// Performs `request` and returns the response body alongside its
+    /// `URLResponse`. Mirrors `URLSession.data(for:)`.
     func data(for request: URLRequest) async throws -> (Data, URLResponse)
 }
 

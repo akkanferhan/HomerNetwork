@@ -6,6 +6,61 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.3.0] — 2026-04-26
+
+Complexity-reduction pass: removes duplicate or single-use abstractions, leans on HomerFoundation 0.2.0, and tightens the public surface ahead of 1.0. All notable changes below are source-breaking for 0.2.x consumers — see migration notes.
+
+### Added
+
+- `FoundationNetworkLogger.publicHeaderFields` parameter — header field allowlist that controls debug-level emission of header values, replacing the equivalent feature on the removed `OSLogNetworkLogger`.
+
+### Changed
+
+- **BREAKING**: `Parameters` typealias renamed to `HTTPParameters` (`[String: any Sendable]`). The old name collided with `HomerFoundation.Parameters` (`[String: Any]`); the new name is unambiguous when both modules are imported and binds the type to its HTTP parameter-bag role. Update every `Parameters` reference in endpoint definitions, custom encoders, and call sites.
+- **BREAKING**: `API` protocol folded into `Endpoint`. Conformers that referenced `API` directly (rare — usually only as a supertype) must conform to `Endpoint` instead. The required properties (`baseURL`, `baseHeaders`, `timeout`) are unchanged.
+- HomerFoundation dependency requirement bumped to `0.2.0`. `URLParameterEncoder` now uses `HomerFoundation.AnyOptional` for `nil` detection; `MultipartFormData` now uses `HomerFoundation.Data.append(_:encoding:)` for UTF-8 byte appends.
+- Renamed the testing SPI from `@_spi(HomerNetworkInternal)` to `@_spi(Testing)` to match Swift's emerging community convention. Test targets that imported via the old SPI must update their `@_spi(...)` import to `@_spi(Testing)`.
+
+### Renamed
+
+- `EncodingError` → `NetworkEncodingError`. The legacy name shadowed Swift's standard library `EncodingError` (raised by `Encoder` implementations); the new name is unambiguous and signals that the type covers parameter and multipart serialization failures, not `Codable` failures.
+
+### Fixed
+
+- Filled in DocC comments on previously undocumented public symbols across the surface (`HTTPHeaders`, `HTTPHeader.Field` / `.Value`, `HTTPMethod`, `HTTPStatus`, `MimeType`, `MultipartFormData`, `MultipartPart`, `NetworkResponse`, `NetworkClient`, `NetworkClientConfiguration`, `URLSessionProtocol`, `NetworkError.description`).
+- Updated stale DocC cross-references left over from the `API` → `Endpoint` merge and the `Parameters` rename (now `HTTPParameters`).
+
+### Removed
+
+- **BREAKING**: `OSLogNetworkLogger`. Replace with `FoundationNetworkLogger(log: Log(subsystem: "...", category: "..."), publicHeaderFields: [...], publicQueryKeys: [...])` — `Log` is itself `os.Logger`-backed, so log destinations and privacy semantics are preserved.
+- **BREAKING**: `API` protocol. Use `Endpoint` directly (see above).
+- **BREAKING**: `Parameters` typealias. Use `HTTPParameters` (see above).
+- **BREAKING**: `URLSanitizer` made internal. Third-party loggers should perform their own sanitization or live in this module.
+- **BREAKING**: `NetworkLoggerFormat` made internal. Was only consumed by bundled loggers.
+- **BREAKING**: `HTTPStatusRange` made private (now nested as `StatusCodeType.Range`). Was only consumed by `StatusCodeType.init(statusCode:)`.
+- **BREAKING**: Default empty implementations of `NetworkLogger.log(response:data:)` and `NetworkLogger.log(error:)`. All three methods are now required so silent overrides are explicit; conform to `NoopNetworkLogger` (or implement them as `{}`) for a no-op logger.
+- Internal `AnyOptionalProtocol` in `URLParameterEncoder.swift` — replaced by `HomerFoundation.AnyOptional`.
+
+### Migration from 0.2.x
+
+1. **`Parameters` → `HTTPParameters`** — search-and-replace across endpoint enums, custom `ParameterEncoder` conformers, and `HTTPTask.parameters(...)` call sites. The value type (`[String: any Sendable]`) is unchanged.
+2. **`API` protocol** — drop the explicit conformance; `Endpoint` already requires (and provides defaults for) `baseURL`, `baseHeaders`, `timeout`.
+3. **`OSLogNetworkLogger`** — replace
+   ```swift
+   OSLogNetworkLogger(subsystem: "com.example.app", category: "network", publicHeaderFields: [.contentType])
+   ```
+   with
+   ```swift
+   FoundationNetworkLogger(
+       log: Log(subsystem: "com.example.app", category: "network"),
+       publicHeaderFields: [HTTPHeader.Field.contentType]
+   )
+   ```
+4. **Custom `NetworkLogger` conformer** — implement `log(response:data:)` and `log(error:)` explicitly (no more empty defaults). Add `func log(response:_:_) {}` / `func log(error:_) {}` if a no-op is desired.
+5. **`URLSanitizer` / `NetworkLoggerFormat`** — if you reached into either of these (very unusual outside the library), copy the constants you needed into your own code.
+6. **`EncodingError` → `NetworkEncodingError`** — rename the type at every catch site. Cases (`missingURL`, `jsonSerializationFailed(underlying:)`, `multipartFailure(_:)`) are unchanged.
+7. **Testing SPI** — if a test target imported `RequestBuilder` via `@_spi(HomerNetworkInternal) @testable import HomerNetwork`, change the SPI name to `@_spi(Testing)`.
+
 ## [0.2.0] — 2026-04-26
 
 Folds `HomerNetworkFoundation` into the core target and introduces an always-on reachability pre-flight gate. Both changes are source-breaking for 0.1.x consumers — see migration notes below.
@@ -70,3 +125,8 @@ Initial public release. Modern Swift 6 / iOS 18 networking layer extracted from 
 | `statucCode` | `statusCode` |
 | `unRecognizedError` | `unrecognized` |
 | Multipart text + file in one protocol | `MultipartPart.Kind.text` / `.file` |
+
+[Unreleased]: https://github.com/akkanferhan/HomerNetwork/compare/0.3.0...HEAD
+[0.3.0]: https://github.com/akkanferhan/HomerNetwork/releases/tag/0.3.0
+[0.2.0]: https://github.com/akkanferhan/HomerNetwork/releases/tag/0.2.0
+[0.1.0]: https://github.com/akkanferhan/HomerNetwork/releases/tag/0.1.0

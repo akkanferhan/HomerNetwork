@@ -6,5 +6,8 @@ import Foundation
 /// `NetworkClient` is a protocol so consumers can substitute a stub during
 /// tests; the production implementation is ``DefaultNetworkClient``.
 public protocol NetworkClient: Sendable {
+    /// Sends `endpoint` and returns the decoded ``NetworkResponse``.
+    /// Throws ``NetworkError`` on transport, encoding, decoding, or
+    /// reachability failures.
     func send<E: Endpoint>(_ endpoint: E) async throws -> NetworkResponse<E.Response>
 }
