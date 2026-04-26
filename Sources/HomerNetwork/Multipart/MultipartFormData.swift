@@ -1,10 +1,14 @@
 import Foundation
+import HomerFoundation
 
 /// A `multipart/form-data` payload comprised of zero or more ``MultipartPart`` values.
 public struct MultipartFormData: Sendable, Hashable {
+    /// The ordered parts emitted into the request body.
     public let parts: [MultipartPart]
+    /// The boundary token separating each ``MultipartPart`` and terminating the body.
     public let boundary: String
 
+    /// Creates a payload from the given parts, generating a fresh boundary token by default.
     public init(parts: [MultipartPart], boundary: String = MultipartFormData.makeBoundary()) {
         self.parts = parts
         self.boundary = boundary
@@ -67,14 +71,14 @@ public struct MultipartFormData: Sendable, Hashable {
     }
 }
 
-extension Data {
-    /// Appends `string` as UTF-8 bytes; throws if the string cannot be
-    /// represented in UTF-8 so the caller surfaces a multipart encoding
-    /// failure instead of producing a silently truncated body.
+private extension Data {
+    /// Appends `string` as UTF-8 bytes via ``HomerFoundation/Data/append(_:encoding:)``,
+    /// throwing a multipart-specific failure when the encoding cannot
+    /// represent `string` so the caller surfaces a meaningful error
+    /// instead of producing a silently truncated body.
     mutating func appendUTF8(_ string: String) throws {
-        guard let data = string.data(using: .utf8) else {
+        guard append(string, encoding: .utf8) else {
             throw NetworkEncodingError.multipartFailure("non-UTF-8 fragment: \(string)")
         }
-        append(data)
     }
 }
