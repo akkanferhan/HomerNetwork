@@ -5,7 +5,7 @@ import Foundation
 ///
 /// `NetworkClient` is a protocol so consumers can substitute a stub during
 /// tests; the production implementation is ``DefaultNetworkClient``.
-public protocol NetworkClient: Sendable {
+public protocol NetworkClientProtocol: Sendable {
     /// Sends `endpoint` and returns the decoded ``NetworkResponse``.
     /// Throws ``NetworkError`` on transport, encoding, decoding, or
     /// reachability failures.

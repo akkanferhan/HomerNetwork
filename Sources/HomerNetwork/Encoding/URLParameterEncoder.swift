@@ -22,7 +22,7 @@ struct URLParameterEncoder: ParameterEncoder {
         var queryItems = components.queryItems ?? []
         for (key, value) in parameters {
             queryItems.removeAll { $0.name == key }
-            queryItems.append(URLQueryItem(name: key, value: Self.queryString(for: value)))
+            queryItems.append(URLQueryItem(name: key, value: queryString(for: value)))
         }
         components.queryItems = queryItems
         guard let updatedURL = components.url else {
@@ -46,7 +46,7 @@ struct URLParameterEncoder: ParameterEncoder {
     /// `String(describing:)`, which produces predictable output for
     /// `String`, `Int`, and `Double`; callers should avoid passing `Date`,
     /// `Data`, or custom types directly.
-    static func queryString(for value: any Sendable) -> String {
+    func queryString(for value: any Sendable) -> String {
         switch value {
         case let bool as Bool:
             return bool ? "true" : "false"

@@ -1,4 +1,5 @@
 import Foundation
+import HomerFoundation
 
 /// The injectable configuration for ``DefaultNetworkClient``.
 ///
@@ -8,19 +9,19 @@ import Foundation
 public struct NetworkClientConfiguration: Sendable {
     /// Transport used to send requests; conforms to ``URLSessionProtocol`` so
     /// tests can swap it for a stub.
-    public let session: any URLSessionProtocol
+    let session: any URLSessionProtocol
     /// Headers merged into every request before ``Endpoint``-level overrides.
-    public let defaultHeaders: HTTPHeaders
+    let defaultHeaders: HTTPHeaders
     /// Fallback request timeout, in seconds, applied when the endpoint
     /// reports a non-positive value.
-    public let defaultTimeout: TimeInterval
+    let defaultTimeout: TimeInterval
     /// Sink consulted on every request, response, and error.
-    public let logger: any NetworkLogger
+    let logger: any NetworkLogger
     /// When `true`, non-2xx responses throw ``NetworkError/http(status:data:)``
     /// instead of being decoded.
-    public let validateHTTPStatus: Bool
+    let validateHTTPStatus: Bool
     /// Pre-flight connectivity gate consulted before every request.
-    public let reachability: any ReachabilityProviding
+    let reachability: any ReachabilityProviding
 
     /// - Parameters:
     ///   - session: Transport used to send requests. Defaults to a fresh
