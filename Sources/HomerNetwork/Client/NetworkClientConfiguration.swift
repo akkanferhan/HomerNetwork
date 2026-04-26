@@ -6,11 +6,20 @@ import Foundation
 /// Callers wishing to override the transport (for tests, replay, …) supply
 /// their own ``URLSessionProtocol``.
 public struct NetworkClientConfiguration: Sendable {
+    /// Transport used to send requests; conforms to ``URLSessionProtocol`` so
+    /// tests can swap it for a stub.
     public var session: any URLSessionProtocol
+    /// Headers merged into every request before ``Endpoint``-level overrides.
     public var defaultHeaders: HTTPHeaders
+    /// Fallback request timeout, in seconds, applied when the endpoint
+    /// reports a non-positive value.
     public var defaultTimeout: TimeInterval
+    /// Sink consulted on every request, response, and error.
     public var logger: any NetworkLogger
+    /// When `true`, non-2xx responses throw ``NetworkError/http(status:data:)``
+    /// instead of being decoded.
     public var validateHTTPStatus: Bool
+    /// Pre-flight connectivity gate consulted before every request.
     public var reachability: any ReachabilityProviding
 
     /// - Parameters:

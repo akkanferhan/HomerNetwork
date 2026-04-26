@@ -42,6 +42,7 @@ public enum NetworkError: Error, Sendable {
 }
 
 extension NetworkError: CustomStringConvertible {
+    /// Returns a non-localized debug description suitable for logs.
     public var description: String {
         switch self {
         case .invalidRequest:

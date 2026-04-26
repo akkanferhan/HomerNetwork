@@ -7,14 +7,20 @@ import Foundation
 /// distinction is encoded in ``Kind`` so callers cannot accidentally mix
 /// the two.
 public struct MultipartPart: Sendable, Hashable {
+    /// Whether the part carries a textual value or a binary file payload.
     public enum Kind: Sendable, Hashable {
+        /// A text field whose UTF-8 representation is written verbatim.
         case text(String)
+        /// A binary file field with its filename and content type.
         case file(data: Data, filename: String, mimeType: MimeType)
     }
 
+    /// The form field name used in the part's `Content-Disposition` header.
     public let name: String
+    /// Whether the part carries text or file bytes.
     public let kind: Kind
 
+    /// Creates a part with the given form field name and ``Kind`` payload.
     public init(name: String, kind: Kind) {
         self.name = name
         self.kind = kind

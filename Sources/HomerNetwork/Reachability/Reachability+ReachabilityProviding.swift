@@ -11,6 +11,8 @@ import HomerFoundation
 /// to reflect live state. A freshly constructed instance reports
 /// `false` until the first path update arrives.
 extension Reachability: ReachabilityProviding {
+    /// Reads the cached ``HomerFoundation/Reachability/isConnected`` flag
+    /// on the main actor; no fresh probe is performed.
     public nonisolated func isReachable() async -> Bool {
         await MainActor.run { self.isConnected }
     }
