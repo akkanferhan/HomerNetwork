@@ -5,7 +5,7 @@ Modern Swift 6 / iOS 18 networking library for the Homer suite of Apple apps. Ty
 - **Swift tools:** 6.0 (`swiftLanguageModes: [.v6]`, strict concurrency)
 - **Platforms:** iOS 18+, macOS 14+
 - **Tests:** Swift Testing — 110 tests in 12 suites
-- **Status:** `0.1.0` (released); `0.2.0` pending release — public API documented with DocC, 0 warnings
+- **Status:** `0.2.0` — public API documented with DocC, 0 warnings
 
 ## Installation
 
@@ -13,7 +13,7 @@ Swift Package Manager — add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/akkanferhan/HomerNetwork.git", from: "0.1.0")
+    .package(url: "https://github.com/akkanferhan/HomerNetwork.git", from: "0.2.0")
 ]
 ```
 
