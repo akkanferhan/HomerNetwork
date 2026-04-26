@@ -1,7 +1,7 @@
 import Foundation
 
 /// A semantic categorization of an HTTP status code.
-public enum StatusCodeType: Sendable, Hashable {
+enum StatusCodeType: Sendable, Hashable {
     case informational
     case success
     case redirection
@@ -11,7 +11,7 @@ public enum StatusCodeType: Sendable, Hashable {
 
     /// Buckets a raw HTTP status code into its semantic ``StatusCodeType``.
     /// Codes outside the 100–599 range resolve to ``unrecognized``.
-    public init(statusCode: Int) {
+    init(statusCode: Int) {
         switch statusCode {
         case Range.informational: self = .informational
         case Range.success:       self = .success
@@ -37,7 +37,7 @@ public struct HTTPStatus: Sendable, Hashable {
     /// The raw HTTP status code as reported by the server.
     public let statusCode: Int
     /// The ``StatusCodeType`` bucket derived from ``statusCode``.
-    public let statusType: StatusCodeType
+    let statusType: StatusCodeType
 
     /// Creates a status from a raw code and computes its ``statusType``.
     public init(statusCode: Int) {
@@ -50,6 +50,14 @@ public struct HTTPStatus: Sendable, Hashable {
         self.init(statusCode: httpURLResponse.statusCode)
     }
 
+    /// `true` when the status code falls in the 1xx range.
+    public var isInformational: Bool { statusType == .informational }
     /// `true` when the status code falls in the 2xx range.
     public var isSuccess: Bool { statusType == .success }
+    /// `true` when the status code falls in the 3xx range.
+    public var isRedirection: Bool { statusType == .redirection }
+    /// `true` when the status code falls in the 4xx range.
+    public var isClientError: Bool { statusType == .clientError }
+    /// `true` when the status code falls in the 5xx range.
+    public var isServerError: Bool { statusType == .serverError }
 }

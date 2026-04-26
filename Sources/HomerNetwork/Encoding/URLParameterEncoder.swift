@@ -6,13 +6,13 @@ import HomerFoundation
 /// Existing query items already present on the URL are preserved; if a
 /// caller supplies a key that the URL already has, the existing value is
 /// replaced rather than duplicated.
-public struct URLParameterEncoder: ParameterEncoder {
+struct URLParameterEncoder: ParameterEncoder {
     /// Creates a stateless encoder.
-    public init() {}
+    init() {}
 
     /// Appends `parameters` as URL query items to `request.url`, replacing
     /// any existing entries with the same key.
-    public func encode(_ parameters: HTTPParameters, into request: inout URLRequest) throws {
+    func encode(_ parameters: HTTPParameters, into request: inout URLRequest) throws {
         guard let url = request.url else { throw NetworkEncodingError.missingURL }
         guard !parameters.isEmpty else { return }
 

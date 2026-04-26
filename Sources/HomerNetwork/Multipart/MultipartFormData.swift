@@ -8,15 +8,17 @@ public struct MultipartFormData: Sendable, Hashable {
     /// The boundary token separating each ``MultipartPart`` and terminating the body.
     public let boundary: String
 
-    /// Creates a payload from the given parts, generating a fresh boundary token by default.
-    public init(parts: [MultipartPart], boundary: String = MultipartFormData.makeBoundary()) {
+    /// Creates a payload from the given parts. Pass `boundary` to use a
+    /// caller-supplied token (useful in tests); when `nil` (the default) a
+    /// fresh, unique token is generated automatically.
+    public init(parts: [MultipartPart], boundary: String? = nil) {
         self.parts = parts
-        self.boundary = boundary
+        self.boundary = boundary ?? Self.makeBoundary()
     }
 
     /// Generates a unique boundary token. The ``MultipartFormat/boundaryPrefix``
     /// keeps logs readable; the suffix is a UUID.
-    public static func makeBoundary() -> String {
+    static func makeBoundary() -> String {
         "\(MultipartFormat.boundaryPrefix)\(UUID().uuidString)"
     }
 
