@@ -3,7 +3,8 @@ import Foundation
 /// A typed HTTP endpoint.
 ///
 /// Conform an enum or struct to `Endpoint` to describe a single request:
-/// its path, method, body, and the type its JSON response decodes into.
+/// its base URL, path, method, body, and the type its JSON response
+/// decodes into.
 ///
 /// ```swift
 /// enum UserAPI: Endpoint {
@@ -16,11 +17,24 @@ import Foundation
 ///     var task: HTTPTask { .plain }
 /// }
 /// ```
-public protocol Endpoint: API {
+public protocol Endpoint: Sendable {
     /// The decoded type returned by ``NetworkClient/send(_:)``.
     associatedtype Response: Decodable & Sendable
 
-    /// The path appended to ``API/baseURL``. Leading `/` recommended.
+    /// The scheme + host (and optional path prefix) for the endpoint.
+    var baseURL: URL { get }
+
+    /// Headers applied to the request before ``Endpoint/headers`` —
+    /// typically API keys or User-Agent. Override on a single endpoint to
+    /// share defaults across an enum's cases.
+    var baseHeaders: HTTPHeaders { get }
+
+    /// The default request timeout in seconds. Override on an endpoint to
+    /// raise or lower the limit; falls back to
+    /// ``NetworkClientConfiguration/defaultTimeout`` when zero.
+    var timeout: TimeInterval { get }
+
+    /// The path appended to ``Endpoint/baseURL``. Leading `/` recommended.
     var path: String { get }
 
     /// The HTTP verb.
@@ -29,7 +43,8 @@ public protocol Endpoint: API {
     /// The body / parameter / multipart shape of the request.
     var task: HTTPTask { get }
 
-    /// Headers specific to this endpoint, merged on top of ``API/baseHeaders``.
+    /// Headers specific to this endpoint, merged on top of
+    /// ``Endpoint/baseHeaders``.
     var headers: HTTPHeaders { get }
 
     /// The decoder used to parse the response body.
@@ -37,11 +52,13 @@ public protocol Endpoint: API {
 }
 
 public extension Endpoint {
+    var baseHeaders: HTTPHeaders { [:] }
+    var timeout: TimeInterval { HomerNetworkDefaults.timeoutInterval }
     var headers: HTTPHeaders { [:] }
     var decoder: JSONDecoder { JSONDecoder() }
 
     /// The merged set of headers applied to the outgoing request:
-    /// ``API/baseHeaders`` first, then ``Endpoint/headers`` (which wins).
+    /// ``Endpoint/baseHeaders`` first, then ``Endpoint/headers`` (which wins).
     var allHeaders: HTTPHeaders {
         baseHeaders.merging(headers)
     }
