@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.4.1] — 2026-04-27
+
+### Fixed
+
+- `DefaultReachabilityChecker` promoted back to `public` to restore the SPI used by HomerImagery (regression introduced in 0.4.0 public surface minimization).
+
 ## [0.4.0] — 2026-04-27
 
 ### Changed
@@ -164,7 +170,8 @@ Initial public release. Modern Swift 6 / iOS 18 networking layer extracted from 
 | `unRecognizedError` | `unrecognized` |
 | Multipart text + file in one protocol | `MultipartPart.Kind.text` / `.file` |
 
-[Unreleased]: https://github.com/akkanferhan/HomerNetwork/compare/0.4.0...HEAD
+[Unreleased]: https://github.com/akkanferhan/HomerNetwork/compare/0.4.1...HEAD
+[0.4.1]: https://github.com/akkanferhan/HomerNetwork/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/akkanferhan/HomerNetwork/releases/tag/0.4.0
 [0.3.0]: https://github.com/akkanferhan/HomerNetwork/releases/tag/0.3.0
 [0.2.0]: https://github.com/akkanferhan/HomerNetwork/releases/tag/0.2.0
