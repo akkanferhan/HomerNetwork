@@ -16,13 +16,13 @@ import HomerFoundation
 /// > instance with ``HomerFoundation/Reachability/start()`` called —
 /// > it conforms to ``ReachabilityProviding`` directly and reads from
 /// > a cached observable property.
-struct DefaultReachabilityChecker: ReachabilityProviding {
+public struct DefaultReachabilityChecker: ReachabilityProviding {
     /// Creates a new one-shot reachability checker.
-    init() {}
+    public init() {}
 
     /// Performs a one-shot `NWPathMonitor` probe and returns `true` unless
     /// the path is `.unavailable`.
-    func isReachable() async -> Bool {
+    public func isReachable() async -> Bool {
         await Reachability.currentStatus() != .unavailable
     }
 }
