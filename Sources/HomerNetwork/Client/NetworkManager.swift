@@ -6,7 +6,7 @@ import Foundation
 /// `actor` isolation means concurrent ``send(_:)`` calls don't race over
 /// shared mutable state and keeps the door open for in-flight tracking,
 /// request deduplication, and authentication refresh in future versions.
-public actor DefaultNetworkClient: NetworkClient {
+public actor NetworkManager: NetworkClientProtocol {
     private let configuration: NetworkClientConfiguration
     private let builder = RequestBuilder()
 

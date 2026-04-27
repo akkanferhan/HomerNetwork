@@ -2,17 +2,15 @@ import Foundation
 
 /// Translates an ``Endpoint`` and configuration into a ready-to-send `URLRequest`.
 ///
-/// Internal — exposed via `@_spi(Testing)` so the test target
 /// can verify request construction without spinning up a transport.
-@_spi(Testing)
-public struct RequestBuilder: Sendable {
+struct RequestBuilder: Sendable {
     /// Creates a stateless request builder.
-    public init() {}
+    init() {}
 
     /// Builds a `URLRequest` for `endpoint`, merging `defaultHeaders` under
     /// the endpoint's own headers and falling back to `defaultTimeout`
     /// whenever the endpoint reports a non-positive timeout.
-    public func makeRequest<E: Endpoint>(
+    func makeRequest<E: Endpoint>(
         for endpoint: E,
         defaultHeaders: HTTPHeaders,
         defaultTimeout: TimeInterval
@@ -34,11 +32,13 @@ public struct RequestBuilder: Sendable {
         try apply(task: endpoint.task, to: &request)
         return request
     }
+}
 
+private extension RequestBuilder {
     /// Joins `base` and `path` while preserving any query string or
     /// fragment that `path` already carries — `URL.appendingPathComponent`
     /// percent-encodes `?` and `#`, silently destroying them.
-    private func resolvedURL(base: URL, path: String) throws -> URL {
+    func resolvedURL(base: URL, path: String) throws -> URL {
         guard var components = URLComponents(url: base, resolvingAgainstBaseURL: false) else {
             throw NetworkError.invalidRequest
         }
@@ -68,7 +68,7 @@ public struct RequestBuilder: Sendable {
     }
 
     /// Splits a path-with-optional-query-and-fragment string into its parts.
-    private func split(path: String) -> (path: String, query: String?, fragment: String?) {
+    func split(path: String) -> (path: String, query: String?, fragment: String?) {
         var rest = path
         var fragment: String?
         if let hashIndex = rest.firstIndex(of: "#") {
@@ -83,7 +83,7 @@ public struct RequestBuilder: Sendable {
         return (rest, query, fragment)
     }
 
-    private func apply(task: HTTPTask, to request: inout URLRequest) throws {
+    func apply(task: HTTPTask, to request: inout URLRequest) throws {
         switch task {
         case .plain:
             if request.value(forHTTPHeaderField: HTTPHeader.Field.contentType) == nil {
