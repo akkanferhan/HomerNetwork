@@ -1,4 +1,5 @@
 import Foundation
+import HomerFoundation
 
 /// The default ``NetworkClient`` implementation.
 ///
@@ -39,6 +40,19 @@ public actor NetworkManager: NetworkClientProtocol {
             throw NetworkError.invalidRequest
         }
 
+        return try await sendWithRetry(request: request, endpoint: endpoint, attempt: 0)
+    }
+
+    /// Retry-aware transport hop. Recursive on retryable status codes
+    /// when ``NetworkClientConfiguration/retryPolicy`` is configured and
+    /// the endpoint's verb is idempotent. The recursion is bounded by
+    /// ``HTTPRetryPolicy/maxAttempts`` and naturally rewinds on success
+    /// or non-retryable failure.
+    private func sendWithRetry<E: Endpoint>(
+        request: URLRequest,
+        endpoint: E,
+        attempt: Int
+    ) async throws -> NetworkResponse<E.Response> {
         configuration.logger.log(request: request)
 
         let data: Data
@@ -61,6 +75,19 @@ public actor NetworkManager: NetworkClientProtocol {
 
         let status = HTTPStatus(httpURLResponse: httpResponse)
         let headers = HTTPHeaders(httpResponse.responseHeaders)
+
+        if let policy = configuration.retryPolicy,
+           endpoint.httpMethod.isIdempotent,
+           policy.shouldRetry(statusCode: status.statusCode, attempt: attempt) {
+            let retryAfter = httpResponse.value(forHTTPHeaderField: HTTPHeader.Field.retryAfter)
+            let delay = policy.delay(forAttempt: attempt, retryAfterHeader: retryAfter)
+            do {
+                try await Task.sleep(nanoseconds: UInt64(delay * Double(NSEC_PER_SEC)))
+            } catch {
+                throw NetworkError.cancelled
+            }
+            return try await sendWithRetry(request: request, endpoint: endpoint, attempt: attempt + 1)
+        }
 
         if configuration.validateHTTPStatus, !status.isSuccess {
             throw NetworkError.http(status: status, data: data)

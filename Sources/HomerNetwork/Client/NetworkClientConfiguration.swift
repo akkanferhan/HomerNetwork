@@ -22,6 +22,11 @@ public struct NetworkClientConfiguration: Sendable {
     let validateHTTPStatus: Bool
     /// Pre-flight connectivity gate consulted before every request.
     let reachability: any ReachabilityProviding
+    /// Optional automatic retry policy. When set, ``NetworkManager`` reissues
+    /// **idempotent** requests (GET/HEAD/PUT/DELETE) that fail with a status
+    /// code listed in ``HTTPRetryPolicy/retryableStatuses``. `nil` (the
+    /// default) preserves the original single-shot behaviour.
+    let retryPolicy: HTTPRetryPolicy?
 
     /// - Parameters:
     ///   - session: Transport used to send requests. Defaults to a fresh
@@ -42,13 +47,18 @@ public struct NetworkClientConfiguration: Sendable {
     ///     ``HomerFoundation/Reachability`` for better throughput, or a
     ///     stub returning `true` to disable the gate entirely (e.g. in
     ///     unit tests or replay sessions).
+    ///   - retryPolicy: Automatic retry policy for transient HTTP failures
+    ///     (429/408/503 by default). Only **idempotent** methods are
+    ///     reissued — POST/PATCH never auto-retry. Pass `nil` (default)
+    ///     to disable retries entirely.
     public init(
         session: any URLSessionProtocol = URLSession(configuration: .ephemeral),
         defaultHeaders: HTTPHeaders = [:],
         defaultTimeout: TimeInterval = 30,
         logger: any NetworkLogger = NoopNetworkLogger(),
         validateHTTPStatus: Bool = true,
-        reachability: (any ReachabilityProviding)? = nil
+        reachability: (any ReachabilityProviding)? = nil,
+        retryPolicy: HTTPRetryPolicy? = nil
     ) {
         self.session = session
         self.defaultHeaders = defaultHeaders
@@ -56,5 +66,6 @@ public struct NetworkClientConfiguration: Sendable {
         self.logger = logger
         self.validateHTTPStatus = validateHTTPStatus
         self.reachability = reachability ?? DefaultReachabilityChecker()
+        self.retryPolicy = retryPolicy
     }
 }
