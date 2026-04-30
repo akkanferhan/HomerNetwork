@@ -16,7 +16,7 @@ struct ReachabilityGateTests {
             validateHTTPStatus: true,
             reachability: NeverReachable()
         )
-        let client: any NetworkClient = DefaultNetworkClient(configuration: config)
+        let client: any NetworkClientProtocol = NetworkManager(configuration: config)
 
         var caughtOffline = false
         do {
@@ -38,7 +38,7 @@ struct ReachabilityGateTests {
             validateHTTPStatus: true,
             reachability: NeverReachable()
         )
-        let client: any NetworkClient = DefaultNetworkClient(configuration: config)
+        let client: any NetworkClientProtocol = NetworkManager(configuration: config)
 
         _ = try? await client.send(GateEndpoint())
 
@@ -56,7 +56,7 @@ struct ReachabilityGateTests {
             validateHTTPStatus: true,
             reachability: NeverReachable()
         )
-        let client: any NetworkClient = DefaultNetworkClient(configuration: config)
+        let client: any NetworkClientProtocol = NetworkManager(configuration: config)
 
         _ = try? await client.send(GateEndpoint())
 
@@ -75,7 +75,7 @@ struct ReachabilityGateTests {
             validateHTTPStatus: true,
             reachability: NeverReachable()
         )
-        let client: any NetworkClient = DefaultNetworkClient(configuration: config)
+        let client: any NetworkClientProtocol = NetworkManager(configuration: config)
 
         let task = Task<Void, Error> {
             _ = try await client.send(GateEndpoint())
@@ -116,7 +116,7 @@ struct ReachabilityGateTests {
             validateHTTPStatus: true,
             reachability: AlwaysReachable()
         )
-        let client: any NetworkClient = DefaultNetworkClient(configuration: config)
+        let client: any NetworkClientProtocol = NetworkManager(configuration: config)
 
         let result = try await client.send(GateEndpoint())
 
