@@ -14,4 +14,20 @@ public enum HTTPMethod: String, Sendable, Hashable {
     case delete = "DELETE"
     /// `HEAD` — same semantics as `GET` but without a response body (RFC 9110 §9.3.2).
     case head = "HEAD"
+
+    /// `true` when the method is defined as idempotent by RFC 9110 §9.2.2 —
+    /// safe to retry without observable additional side effects.
+    ///
+    /// Used by ``NetworkManager`` to gate automatic retries: only
+    /// idempotent verbs are reissued on transient failures, so a `POST`
+    /// that times out after the server already accepted it doesn't get
+    /// duplicated.
+    public var isIdempotent: Bool {
+        switch self {
+        case .get, .head, .put, .delete:
+            return true
+        case .post, .patch:
+            return false
+        }
+    }
 }

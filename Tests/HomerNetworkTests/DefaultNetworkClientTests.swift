@@ -2,8 +2,8 @@ import Testing
 import Foundation
 @testable import HomerNetwork
 
-// Convenience alias to disambiguate DefaultNetworkClient.send
-private typealias Client = any NetworkClient
+// Convenience alias to disambiguate NetworkManager.send
+private typealias Client = any NetworkClientProtocol
 
 @Suite("DefaultNetworkClient")
 struct DefaultNetworkClientTests {
@@ -15,7 +15,7 @@ struct DefaultNetworkClientTests {
         let payload = UserPayload(id: "42", name: "Homer")
         let data = try JSONEncoder().encode(payload)
         let session = MockURLSession(result: .success((data, makeHTTPResponse(statusCode: 200))))
-        let client: Client = DefaultNetworkClient(configuration: makeConfig(session: session))
+        let client: Client = NetworkManager(configuration: makeConfig(session: session))
 
         let response = try await client.send(UserEndpoint())
 
@@ -31,7 +31,7 @@ struct DefaultNetworkClientTests {
         let data = try JSONEncoder().encode(payload)
         let httpResponse = makeHTTPResponse(statusCode: 200, headers: ["X-Request-ID": "req-001"])
         let session = MockURLSession(result: .success((data, httpResponse)))
-        let client: Client = DefaultNetworkClient(configuration: makeConfig(session: session))
+        let client: Client = NetworkManager(configuration: makeConfig(session: session))
 
         let response = try await client.send(UserEndpoint())
 
@@ -45,7 +45,7 @@ struct DefaultNetworkClientTests {
     func throwsHTTPErrorFor4xx(statusCode: Int) async throws {
         let errorData = Data("{\"error\":\"not found\"}".utf8)
         let session = MockURLSession(result: .success((errorData, makeHTTPResponse(statusCode: statusCode))))
-        let client: Client = DefaultNetworkClient(configuration: makeConfig(session: session, validateHTTPStatus: true))
+        let client: Client = NetworkManager(configuration: makeConfig(session: session, validateHTTPStatus: true))
 
         var caughtHTTP = false
         do {
@@ -66,7 +66,7 @@ struct DefaultNetworkClientTests {
     func throwsDecodingErrorForMalformedJSON() async throws {
         let malformed = Data("not-valid-json".utf8)
         let session = MockURLSession(result: .success((malformed, makeHTTPResponse(statusCode: 200))))
-        let client: Client = DefaultNetworkClient(configuration: makeConfig(session: session))
+        let client: Client = NetworkManager(configuration: makeConfig(session: session))
 
         var caughtDecoding = false
         do {
@@ -87,7 +87,7 @@ struct DefaultNetworkClientTests {
         let payload = UserPayload(id: "99", name: "Error User")
         let data = try JSONEncoder().encode(payload)
         let session = MockURLSession(result: .success((data, makeHTTPResponse(statusCode: 400))))
-        let client: Client = DefaultNetworkClient(
+        let client: Client = NetworkManager(
             configuration: makeConfig(session: session, validateHTTPStatus: false)
         )
 
@@ -102,7 +102,7 @@ struct DefaultNetworkClientTests {
     @Test("throws NetworkError.transport when URLSession throws")
     func throwsTransportOnSessionError() async throws {
         let session = MockURLSession(result: .failure(URLError(.notConnectedToInternet)))
-        let client: Client = DefaultNetworkClient(configuration: makeConfig(session: session))
+        let client: Client = NetworkManager(configuration: makeConfig(session: session))
 
         var caughtTransport = false
         do {
@@ -126,7 +126,7 @@ struct DefaultNetworkClientTests {
             textEncodingName: nil
         )
         let session = MockURLSession(result: .success((Data(), plainResponse)))
-        let client: Client = DefaultNetworkClient(configuration: makeConfig(session: session))
+        let client: Client = NetworkManager(configuration: makeConfig(session: session))
 
         var caughtInvalidResponse = false
         do {
@@ -147,7 +147,7 @@ struct DefaultNetworkClientTests {
         let data = try JSONEncoder().encode(payload)
         let session = MockURLSession(result: .success((data, makeHTTPResponse(statusCode: 200))))
         let logger = RecordingLogger()
-        let client: Client = DefaultNetworkClient(
+        let client: Client = NetworkManager(
             configuration: makeConfig(session: session, logger: logger)
         )
 
@@ -160,7 +160,7 @@ struct DefaultNetworkClientTests {
     func loggerReceivesErrorOnTransportFailure() async throws {
         let session = MockURLSession(result: .failure(URLError(.timedOut)))
         let logger = RecordingLogger()
-        let client: Client = DefaultNetworkClient(
+        let client: Client = NetworkManager(
             configuration: makeConfig(session: session, logger: logger)
         )
 
@@ -176,7 +176,7 @@ struct DefaultNetworkClientTests {
         let data = try JSONEncoder().encode(payload)
         let session = MockURLSession(result: .success((data, makeHTTPResponse(statusCode: 200))))
         let logger = RecordingLogger()
-        let client: Client = DefaultNetworkClient(
+        let client: Client = NetworkManager(
             configuration: makeConfig(session: session, logger: logger)
         )
 
@@ -190,7 +190,7 @@ struct DefaultNetworkClientTests {
     @Test("URLError.cancelled becomes NetworkError.cancelled")
     func cancelledMaps() async {
         let session = MockURLSession(result: .failure(URLError(.cancelled)))
-        let client = DefaultNetworkClient(configuration: makeConfig(session: session))
+        let client = NetworkManager(configuration: makeConfig(session: session))
         do {
             _ = try await client.send(UserEndpoint())
             Issue.record("expected NetworkError.cancelled")
@@ -209,7 +209,7 @@ struct DefaultNetworkClientTests {
             headers: ["Set-Cookie": "session=abc; Path=/"]
         )
         let session = MockURLSession(result: .success((payload, httpResponse)))
-        let client = DefaultNetworkClient(configuration: makeConfig(session: session))
+        let client = NetworkManager(configuration: makeConfig(session: session))
 
         let response = try await client.send(UserEndpoint())
         let cookie = response.headers.value(forField: "Set-Cookie")
@@ -220,7 +220,7 @@ struct DefaultNetworkClientTests {
     @Test("throws NetworkError.http for 5xx response", arguments: [500, 502, 503])
     func throwsHTTPErrorFor5xx(statusCode: Int) async throws {
         let session = MockURLSession(result: .success((Data(), makeHTTPResponse(statusCode: statusCode))))
-        let client: Client = DefaultNetworkClient(
+        let client: Client = NetworkManager(
             configuration: makeConfig(session: session, validateHTTPStatus: true)
         )
 
