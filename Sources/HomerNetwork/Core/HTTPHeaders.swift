@@ -113,6 +113,9 @@ public enum HTTPHeader {
         public static let contentType = "Content-Type"
         /// `Accept` — advertises which media types the client can parse.
         public static let accept = "Accept"
+        /// `Retry-After` — server hint, in seconds or HTTP-date form, for
+        /// when to reissue a 429/503 request (RFC 7231 §7.1.3).
+        public static let retryAfter = "Retry-After"
     }
 
     /// Canonical HTTP header values paired with ``HTTPHeader/Field``.
