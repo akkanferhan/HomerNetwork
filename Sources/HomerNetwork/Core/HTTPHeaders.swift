@@ -10,7 +10,12 @@ public struct HTTPHeaders: Sendable, Hashable, ExpressibleByDictionaryLiteral, S
     /// Dictionary literal value type — the header value.
     public typealias Value = String
 
-    /// A single field/value pair preserving the field name's original casing.
+    /// A single field/value pair preserving the field name's original
+    /// casing.
+    ///
+    /// Internal — was made non-public in `0.4.0` so the iteration
+    /// surface could expose plain `(field: String, value: String)`
+    /// tuples instead. Mutate via ``HTTPHeaders/set(_:forField:)``.
     struct Entry: Sendable, Hashable {
         /// The header field name as supplied by the caller (case preserved).
         let field: String
@@ -63,7 +68,12 @@ public struct HTTPHeaders: Sendable, Hashable, ExpressibleByDictionaryLiteral, S
         storage.removeAll { $0.field.caseInsensitiveCompare(field) == .orderedSame }
     }
 
-    /// Merges `other` into this collection. Conflicting fields are overwritten.
+    /// Merges `other` into this collection. Conflicting fields are
+    /// overwritten with the value from `other`.
+    ///
+    /// Internal — paired with the public ``merging(_:)`` so callers can
+    /// always reach for the immutable form. Was made non-public in
+    /// `0.4.0`.
     mutating func merge(_ other: HTTPHeaders) {
         for entry in other.storage {
             set(entry.value, forField: entry.field)

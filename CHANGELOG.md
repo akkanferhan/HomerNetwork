@@ -6,6 +6,93 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+## [0.6.0] — 2026-05-01
+
+Documentation and refactor pass. The bulk of the change is two protocol /
+type renames that resolve a naming collision with HomerFoundation 0.5.0,
+plus a sweep through the remaining public DocC blocks to fix references
+that had drifted since the `DefaultNetworkClient` → `NetworkManager`
+rename.
+
+### Renamed
+
+- **BREAKING (with shim)**: `ReachabilityProviding` (the async, `Sendable`
+  one-shot probe) → ``ConnectivityProbing``. The new name disambiguates
+  HomerNetwork's transport-gate protocol from `HomerFoundation 0.5.0`'s
+  observable `@MainActor` `ReachabilityProviding` protocol of the same
+  name (which describes a long-lived `Observable` connectivity provider
+  with `start()` / `stop()` and a published `isConnected` flag —
+  fundamentally a different shape).
+
+  A deprecated `public typealias ReachabilityProviding = ConnectivityProbing`
+  is kept for one minor cycle so existing call sites still compile;
+  Xcode flags them with an `@available(*, deprecated, renamed:)` notice.
+- **BREAKING (with shim)**: `DefaultReachabilityChecker` →
+  ``DefaultConnectivityProbe``. Renamed alongside the protocol; same
+  source-compat typealias treatment.
+
+### Changed
+
+- ``HomerNetworkDefaults`` re-promoted to `public` so it can serve as
+  the default-argument value for both
+  ``NetworkClientConfiguration/init(session:defaultHeaders:defaultTimeout:logger:validateHTTPStatus:reachability:retryPolicy:)``
+  and ``Endpoint/timeout``. The literal `30` that had drifted between
+  the two call sites in `0.4.x` / `0.5.x` is now a single named
+  constant. (Was made internal in `0.4.0`'s public-surface
+  minimization pass; reinstating it is a strict superset of the
+  current API.)
+- DocC sweep across the public surface to fix references that still
+  pointed at `DefaultNetworkClient` (renamed to `NetworkManager` in
+  `0.5.0`) and at the old `NetworkClient/send(_:)` selector
+  (`NetworkClientProtocol/send(_:)`). Affected files:
+  ``NetworkClientConfiguration``, ``NetworkManager``,
+  ``NetworkClientProtocol``, ``URLSessionProtocol``, ``Endpoint``,
+  ``NetworkError``. ``NetworkLogger`` gained an explicit PII warning on
+  the protocol-level documentation; ``NetworkClientProtocol/send(_:)``
+  gained a per-case `Throws:` note covering the full
+  ``NetworkError`` matrix.
+- Filled in a docstring stub on ``RequestBuilder`` (`"can verify ..."`
+  was a half-sentence in `0.5.0`) and tightened the surrounding
+  comments on ``apply(task:to:)`` so the multipart Content-Type
+  override is documented inline.
+- Tightened internal-symbol DocC for ``HTTPHeaders/Entry``,
+  ``HTTPHeaders/merge(_:)``, ``StatusCodeType``, and
+  ``HTTPStatus/statusType`` to call out that they were promoted to
+  non-public in `0.4.0` and to point readers at the supported
+  replacements.
+
+### Refactor
+
+- Lifted three repetitions of the
+  ```swift
+  if request.value(forHTTPHeaderField: …) == nil {
+      request.setValue(…, forHTTPHeaderField: …)
+  }
+  ```
+  guard into a single internal extension method —
+  `URLRequest.setHeaderIfAbsent(_:forField:)` — used by
+  ``JSONParameterEncoder``, ``URLParameterEncoder``, and
+  ``RequestBuilder``. No public API change.
+- Test target: renamed `DefaultNetworkClientTests.swift` →
+  ``NetworkManagerTests.swift`` (and the suite from
+  `"DefaultNetworkClient"` → `"NetworkManager"`) to match the
+  type rename from `0.5.0`. Migrated every internal `AlwaysReachable` /
+  `NeverReachable` stub from `ReachabilityProviding` to
+  ``ConnectivityProbing`` so the test target builds without
+  deprecation warnings.
+
+### Migration
+
+- **No required source changes** for one minor cycle — the deprecated
+  typealiases keep existing `ReachabilityProviding` / `DefaultReachabilityChecker`
+  references compiling (with deprecation warnings).
+- To clear the warnings, rename in your own code:
+  - `ReachabilityProviding` → `ConnectivityProbing`
+  - `DefaultReachabilityChecker` → `DefaultConnectivityProbe`
+- HomerImagery (and any other downstream package that re-uses
+  HomerNetwork's reachability protocol) should follow the rename in
+  its next release; until then, the typealias keeps the build green.
+
 ## [0.4.1] — 2026-04-27
 
 ### Fixed
@@ -170,7 +257,9 @@ Initial public release. Modern Swift 6 / iOS 18 networking layer extracted from 
 | `unRecognizedError` | `unrecognized` |
 | Multipart text + file in one protocol | `MultipartPart.Kind.text` / `.file` |
 
-[Unreleased]: https://github.com/akkanferhan/HomerNetwork/compare/0.4.1...HEAD
+[Unreleased]: https://github.com/akkanferhan/HomerNetwork/compare/0.6.0...HEAD
+[0.6.0]: https://github.com/akkanferhan/HomerNetwork/compare/0.5.0...0.6.0
+[0.5.0]: https://github.com/akkanferhan/HomerNetwork/compare/0.4.1...0.5.0
 [0.4.1]: https://github.com/akkanferhan/HomerNetwork/compare/0.4.0...0.4.1
 [0.4.0]: https://github.com/akkanferhan/HomerNetwork/releases/tag/0.4.0
 [0.3.0]: https://github.com/akkanferhan/HomerNetwork/releases/tag/0.3.0

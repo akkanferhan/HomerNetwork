@@ -1,6 +1,9 @@
 import Foundation
 
 /// A semantic categorization of an HTTP status code.
+///
+/// Internal — was promoted to non-public in `0.4.0`; consumers should
+/// reach for ``HTTPStatus``'s `is*` convenience properties instead.
 enum StatusCodeType: Sendable, Hashable {
     case informational
     case success
@@ -37,6 +40,10 @@ public struct HTTPStatus: Sendable, Hashable {
     /// The raw HTTP status code as reported by the server.
     public let statusCode: Int
     /// The ``StatusCodeType`` bucket derived from ``statusCode``.
+    ///
+    /// Internal — kept around so each `is*` convenience property
+    /// resolves with a single equality check. Was made non-public in
+    /// `0.4.0`; reach for ``isSuccess`` / ``isClientError`` etc. instead.
     let statusType: StatusCodeType
 
     /// Creates a status from a raw code and computes its ``statusType``.
