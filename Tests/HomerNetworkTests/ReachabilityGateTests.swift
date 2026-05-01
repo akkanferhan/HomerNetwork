@@ -127,11 +127,11 @@ struct ReachabilityGateTests {
 
 // MARK: - Stubs
 
-private struct AlwaysReachable: ReachabilityProviding {
+private struct AlwaysReachable: ConnectivityProbing {
     func isReachable() async -> Bool { true }
 }
 
-private struct NeverReachable: ReachabilityProviding {
+private struct NeverReachable: ConnectivityProbing {
     func isReachable() async -> Bool { false }
 }
 

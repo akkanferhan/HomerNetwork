@@ -1,15 +1,20 @@
 import Foundation
 
-/// Translates an ``Endpoint`` and configuration into a ready-to-send `URLRequest`.
+/// Translates an ``Endpoint`` and configuration into a ready-to-send
+/// `URLRequest`.
 ///
-/// can verify request construction without spinning up a transport.
+/// Internal — exposed via the `@_spi(Testing)` SPI so the unit-test
+/// target can verify request construction without spinning up a
+/// transport. Production callers should always go through
+/// ``NetworkManager``.
 struct RequestBuilder: Sendable {
     /// Creates a stateless request builder.
     init() {}
 
-    /// Builds a `URLRequest` for `endpoint`, merging `defaultHeaders` under
-    /// the endpoint's own headers and falling back to `defaultTimeout`
-    /// whenever the endpoint reports a non-positive timeout.
+    /// Builds a `URLRequest` for `endpoint`, merging `defaultHeaders`
+    /// under the endpoint's own headers and falling back to
+    /// `defaultTimeout` whenever the endpoint reports a non-positive
+    /// timeout.
     func makeRequest<E: Endpoint>(
         for endpoint: E,
         defaultHeaders: HTTPHeaders,
@@ -67,7 +72,9 @@ private extension RequestBuilder {
         return url
     }
 
-    /// Splits a path-with-optional-query-and-fragment string into its parts.
+    /// Splits a path-with-optional-query-and-fragment string into its
+    /// constituent pieces so the path can be joined with the base URL
+    /// without losing inline query items or anchors.
     func split(path: String) -> (path: String, query: String?, fragment: String?) {
         var rest = path
         var fragment: String?
@@ -83,22 +90,25 @@ private extension RequestBuilder {
         return (rest, query, fragment)
     }
 
+    /// Routes the supplied ``HTTPTask`` shape into the request — body
+    /// bytes, query items, additional headers, and / or multipart
+    /// payload as appropriate. The default `Content-Type` for
+    /// ``HTTPTask/plain`` is `application/json` so endpoints that don't
+    /// specify one still receive a sensible value.
     func apply(task: HTTPTask, to request: inout URLRequest) throws {
         switch task {
         case .plain:
-            if request.value(forHTTPHeaderField: HTTPHeader.Field.contentType) == nil {
-                request.setValue(
-                    HTTPHeader.Value.applicationJSON,
-                    forHTTPHeaderField: HTTPHeader.Field.contentType
-                )
-            }
+            request.setHeaderIfAbsent(
+                HTTPHeader.Value.applicationJSON,
+                forField: HTTPHeader.Field.contentType
+            )
 
         case .parameters(let body, let encoding, let query):
             try encoding.apply(to: &request, body: body, query: query)
 
         case .parametersAndHeaders(let body, let encoding, let query, let additional):
-            for entry in additional {
-                request.setValue(entry.value, forHTTPHeaderField: entry.field)
+            for (field, value) in additional {
+                request.setValue(value, forHTTPHeaderField: field)
             }
             try encoding.apply(to: &request, body: body, query: query)
 
@@ -107,6 +117,9 @@ private extension RequestBuilder {
                 try URLParameterEncoder().encode(query, into: &request)
             }
             request.httpBody = try formData.encode()
+            // Multipart wins over any prior `Content-Type`, including the
+            // form-urlencoded value `URLParameterEncoder` may have just
+            // installed for the query-only branch above.
             request.setValue(
                 formData.contentTypeHeaderValue,
                 forHTTPHeaderField: HTTPHeader.Field.contentType

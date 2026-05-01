@@ -5,8 +5,8 @@ import Foundation
 // Convenience alias to disambiguate NetworkManager.send
 private typealias Client = any NetworkClientProtocol
 
-@Suite("DefaultNetworkClient")
-struct DefaultNetworkClientTests {
+@Suite("NetworkManager")
+struct NetworkManagerTests {
 
     // MARK: - 2xx + successful decode
 
@@ -255,7 +255,7 @@ private func makeConfig(
     session: any URLSessionProtocol,
     validateHTTPStatus: Bool = true,
     logger: any NetworkLogger = NoopNetworkLogger(),
-    reachability: any ReachabilityProviding = AlwaysReachable()
+    reachability: any ConnectivityProbing = AlwaysReachable()
 ) -> NetworkClientConfiguration {
     NetworkClientConfiguration(
         session: session,
@@ -267,7 +267,7 @@ private func makeConfig(
     )
 }
 
-private struct AlwaysReachable: ReachabilityProviding {
+private struct AlwaysReachable: ConnectivityProbing {
     func isReachable() async -> Bool { true }
 }
 

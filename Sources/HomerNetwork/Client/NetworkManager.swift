@@ -1,24 +1,45 @@
 import Foundation
 import HomerFoundation
 
-/// The default ``NetworkClient`` implementation.
+/// The default ``NetworkClientProtocol`` implementation.
 ///
-/// Built on top of `URLSession` (or any ``URLSessionProtocol`` you inject).
-/// `actor` isolation means concurrent ``send(_:)`` calls don't race over
-/// shared mutable state and keeps the door open for in-flight tracking,
-/// request deduplication, and authentication refresh in future versions.
+/// Built on top of `URLSession` (or any ``URLSessionProtocol`` you
+/// inject). `actor` isolation means concurrent ``send(_:)`` calls don't
+/// race over shared mutable state and keeps the door open for
+/// in-flight tracking, request deduplication, and authentication
+/// refresh in future versions.
+///
+/// ## Lifecycle of a single request
+/// 1. **Reachability gate** — the configured ``ConnectivityProbing`` is
+///    consulted; ``NetworkError/offline`` is thrown without touching the
+///    transport when it reports `false`.
+/// 2. **Request build** — ``RequestBuilder`` resolves the endpoint into
+///    a `URLRequest`; encoding failures surface as
+///    ``NetworkError/encoding(_:)``, anything else as
+///    ``NetworkError/invalidRequest``.
+/// 3. **Transport hop** — `URLSessionProtocol.data(for:)`. Cancellation
+///    propagates as ``NetworkError/cancelled``.
+/// 4. **Retry decision** — when ``NetworkClientConfiguration/retryPolicy``
+///    is set and the endpoint's verb is idempotent, retryable status
+///    codes (per `HTTPRetryPolicy.retryableStatuses`) trigger an
+///    `await Task.sleep(...)` and a recursive re-issue.
+/// 5. **Status validation** — non-2xx responses throw
+///    ``NetworkError/http(status:data:)`` when
+///    ``NetworkClientConfiguration/validateHTTPStatus`` is `true`.
+/// 6. **Decode** — the endpoint's `decoder` produces the typed value.
 public actor NetworkManager: NetworkClientProtocol {
     private let configuration: NetworkClientConfiguration
     private let builder = RequestBuilder()
 
-    /// Creates a client backed by the supplied configuration. Defaults to a
-    /// fresh ``NetworkClientConfiguration`` (ephemeral session, noop logger,
-    /// one-shot reachability checker).
+    /// Creates a client backed by the supplied configuration. Defaults
+    /// to a fresh ``NetworkClientConfiguration`` (ephemeral session,
+    /// noop logger, one-shot ``DefaultConnectivityProbe``, no retries).
     public init(configuration: NetworkClientConfiguration = NetworkClientConfiguration()) {
         self.configuration = configuration
     }
 
-    /// Builds, sends, and decodes the given endpoint. See ``NetworkClient/send(_:)``.
+    /// Builds, sends, and decodes the given endpoint. See
+    /// ``NetworkClientProtocol/send(_:)``.
     public func send<E: Endpoint>(_ endpoint: E) async throws -> NetworkResponse<E.Response> {
         guard await configuration.reachability.isReachable() else {
             configuration.logger.log(error: NetworkError.offline)
@@ -46,7 +67,7 @@ public actor NetworkManager: NetworkClientProtocol {
     /// Retry-aware transport hop. Recursive on retryable status codes
     /// when ``NetworkClientConfiguration/retryPolicy`` is configured and
     /// the endpoint's verb is idempotent. The recursion is bounded by
-    /// ``HTTPRetryPolicy/maxAttempts`` and naturally rewinds on success
+    /// `HTTPRetryPolicy.maxAttempts` and naturally rewinds on success
     /// or non-retryable failure.
     private func sendWithRetry<E: Endpoint>(
         request: URLRequest,
@@ -103,8 +124,8 @@ public actor NetworkManager: NetworkClientProtocol {
     }
 }
 
-/// Wraps an arbitrary `Error` as a `Sendable` value so it can flow through
-/// ``NetworkError`` cases that require `any Error & Sendable`.
+/// Wraps an arbitrary `Error` as a `Sendable` value so it can flow
+/// through ``NetworkError`` cases that require `any Error & Sendable`.
 ///
 /// `@unchecked Sendable` is safe here because the snapshot is captured
 /// eagerly at `init` time as an immutable Swift `String`, and the

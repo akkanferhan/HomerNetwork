@@ -18,7 +18,7 @@ import Foundation
 /// }
 /// ```
 public protocol Endpoint: Sendable {
-    /// The decoded type returned by ``NetworkClient/send(_:)``.
+    /// The decoded type returned by ``NetworkClientProtocol/send(_:)``.
     associatedtype Response: Decodable & Sendable
 
     /// The scheme + host (and optional path prefix) for the endpoint.
@@ -52,13 +52,27 @@ public protocol Endpoint: Sendable {
 }
 
 public extension Endpoint {
+    /// Empty by default — override to share API-key / User-Agent
+    /// headers across an enum's cases.
     var baseHeaders: HTTPHeaders { [:] }
-    var timeout: TimeInterval { 30 }
+
+    /// Defaults to ``HomerNetworkDefaults/timeoutInterval`` (`30` s);
+    /// override for endpoints that legitimately need a shorter or
+    /// longer ceiling. Returning `0` defers to
+    /// ``NetworkClientConfiguration/defaultTimeout``.
+    var timeout: TimeInterval { HomerNetworkDefaults.timeoutInterval }
+
+    /// Empty by default — override for headers specific to this single
+    /// endpoint.
     var headers: HTTPHeaders { [:] }
+
+    /// A fresh `JSONDecoder` with default settings. Override to
+    /// configure key-decoding or date strategies.
     var decoder: JSONDecoder { JSONDecoder() }
 
     /// The merged set of headers applied to the outgoing request:
-    /// ``Endpoint/baseHeaders`` first, then ``Endpoint/headers`` (which wins).
+    /// ``Endpoint/baseHeaders`` first, then ``Endpoint/headers`` (which
+    /// wins on conflict).
     var allHeaders: HTTPHeaders {
         baseHeaders.merging(headers)
     }

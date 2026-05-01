@@ -4,8 +4,8 @@ Modern Swift 6 / iOS 18 networking library for the Homer suite of Apple apps. Ty
 
 - **Swift tools:** 6.0 (`swiftLanguageModes: [.v6]`, strict concurrency)
 - **Platforms:** iOS 18+, macOS 14+
-- **Tests:** Swift Testing — 110 tests in 12 suites
-- **Status:** `0.4.1` — public API documented with DocC, 0 warnings
+- **Tests:** Swift Testing — 136 tests in 17 suites
+- **Status:** `0.6.0` — public API documented with DocC, 0 warnings
 
 ## Installation
 
@@ -13,7 +13,7 @@ Swift Package Manager — add to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/akkanferhan/HomerNetwork.git", from: "0.4.1")
+    .package(url: "https://github.com/akkanferhan/HomerNetwork.git", from: "0.6.0")
 ]
 ```
 
@@ -82,7 +82,7 @@ enum UserAPI: Endpoint {
 Then send it:
 
 ```swift
-let client = DefaultNetworkClient()
+let client = NetworkManager()
 let response = try await client.send(UserAPI.me)
 print(response.value.name)        // decoded User
 print(response.status.statusCode) // 200
@@ -90,7 +90,7 @@ print(response.status.statusCode) // 200
 
 ## Modules
 
-### Client — `NetworkClient` / `DefaultNetworkClient`
+### Client — `NetworkClientProtocol` / `NetworkManager`
 
 Actor-isolated client over `URLSession`. Inject anything that conforms to `URLSessionProtocol` to swap the transport in tests:
 
@@ -102,7 +102,7 @@ let config = NetworkClientConfiguration(
     logger: FoundationNetworkLogger(log: Log(subsystem: "com.example.app", category: "network")),
     validateHTTPStatus: true
 )
-let client = DefaultNetworkClient(configuration: config)
+let client = NetworkManager(configuration: config)
 ```
 
 `validateHTTPStatus` (default `true`) throws `NetworkError.http(status:data:)` for non-2xx responses; flip it off if your backend uses 4xx envelopes you want to decode manually.
@@ -156,17 +156,23 @@ var headers: HTTPHeaders = [
 headers.set("Bearer …", forField: HTTPHeader.Field.authorization)
 ```
 
-### Reachability — `ReachabilityProviding`
+### Reachability — `ConnectivityProbing`
 
-`DefaultNetworkClient` consults its injected `ReachabilityProviding` before every request and throws `NetworkError.offline` when the device reports no usable network path — no transport is attempted, so retries are safe and idempotent.
+`NetworkManager` consults its injected `ConnectivityProbing` before every request and throws `NetworkError.offline` when the device reports no usable network path — no transport is attempted, so retries are safe and idempotent.
 
 ```swift
-public protocol ReachabilityProviding: Sendable {
+public protocol ConnectivityProbing: Sendable {
     func isReachable() async -> Bool
 }
 ```
 
-The default — `DefaultReachabilityChecker()` — wraps `HomerFoundation.Reachability.currentStatus()` and performs a one-shot `NWPathMonitor` probe per request (~10–50ms). For high-throughput clients, inject a long-lived `HomerFoundation.Reachability` instance with `start()` already called; it conforms to `ReachabilityProviding` directly and reads from a cached observable property:
+> Renamed from `ReachabilityProviding` in `0.6.0` to disambiguate from
+> `HomerFoundation 0.5.0`'s observable `ReachabilityProviding` protocol
+> (a `@MainActor` `Observable` provider with `start()` / `stop()`,
+> different shape entirely). A deprecated typealias keeps existing
+> call sites compiling for one minor cycle.
+
+The default — `DefaultConnectivityProbe()` — wraps `HomerFoundation.Reachability.currentStatus()` and performs a one-shot `NWPathMonitor` probe per request (~10–50ms). For high-throughput clients, inject a long-lived `HomerFoundation.Reachability` instance with `start()` already called; it conforms to `ConnectivityProbing` directly and reads from a cached observable property:
 
 ```swift
 import HomerFoundation
@@ -176,13 +182,13 @@ let reachability = Reachability()
 reachability.start()
 
 let config = NetworkClientConfiguration(reachability: reachability)
-let client = DefaultNetworkClient(configuration: config)
+let client = NetworkManager(configuration: config)
 ```
 
 To disable the gate entirely (e.g. in unit tests or when you want to surface raw transport errors), inject a stub returning `true`:
 
 ```swift
-struct AlwaysReachable: ReachabilityProviding {
+struct AlwaysReachable: ConnectivityProbing {
     func isReachable() async -> Bool { true }
 }
 ```
