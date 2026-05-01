@@ -162,7 +162,7 @@ private func makeConfig(
     )
 }
 
-private struct AlwaysReachable: ReachabilityProviding {
+private struct AlwaysReachable: ConnectivityProbing {
     func isReachable() async -> Bool { true }
 }
 
